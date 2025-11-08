@@ -48,7 +48,7 @@ public class Audit {
     private LocalDateTime updatedAt;
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(columnDefinition = "jsonb")
+    @Column(name = "changes")
     private Map<String, Object> changes;
 
     // Constructors
