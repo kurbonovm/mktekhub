@@ -13,7 +13,7 @@ import java.util.Set;
  * Users can have multiple roles and perform various operations on inventory and warehouses.
  */
 @Entity
-@Table(name = "user")
+@Table(name = "\"user\"")
 public class User {
 
     @Id
