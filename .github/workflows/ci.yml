@@ -10,22 +10,6 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
 
-    services:
-      # 1. Setup PostgreSQL Service Container for Spring Boot tests
-      postgres:
-        image: postgres:14-alpine
-        env:
-          POSTGRES_USER: ci_user
-          POSTGRES_PASSWORD: ci_password
-          POSTGRES_DB: ci_database
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
     steps:
       - uses: actions/checkout@v4
 
@@ -35,33 +19,17 @@ jobs:
         with:
           java-version: "17"
           distribution: "temurin"
-          cache: "maven"
+          cache: "maven" 
 
       # 2. Backend Formatting Check (Spotless)
       - name: 🧹 Run Spring Boot Code Formatting Check
-        # Maven command runs from the root, but targets the submodule
         run: mvn spotless:check
         working-directory: ./mktekhub-backend
 
-      - name: ⏳ Wait for Postgres to be ready
-        run: |
-          echo "Waiting for postgres..."
-          for i in `seq 1 10`; do 
-            nc -z localhost 5432 && echo "Postgres is ready!" && exit 0
-            sleep 2
-          done
-          echo "Postgres failed to start after 20 seconds."
-          exit 1
-
-      # 3. Backend Build and Test
+      # 3. Backend Build and Test (uses H2 in-memory database)
       - name: ✅ Build and Test Spring Boot Backend
-        run: mvn -B package
+        run: mvn -B package -Dspring.profiles.active=test
         working-directory: ./mktekhub-backend
-        env:
-          # Match Spring Boot configuration to the CI PostgreSQL service
-          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/ci_database
-          SPRING_DATASOURCE_USERNAME: ci_user
-          SPRING_DATASOURCE_PASSWORD: ci_password
 
       # --- FRONTEND SETUP (mktekhub-frontend) ---
       # Node setup is run once for both linting and building
