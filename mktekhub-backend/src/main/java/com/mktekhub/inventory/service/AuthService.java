@@ -47,7 +47,7 @@ public class AuthService {
      * Register a new user.
      */
     @Transactional
-    public AuthResponse signup(SignupRequest signupRequest) {
+    public String signup(SignupRequest signupRequest) {
         // Check if username exists
         if (userRepository.existsByUsername(signupRequest.getUsername())) {
             throw new RuntimeException("Error: Username is already taken!");
@@ -75,20 +75,7 @@ public class AuthService {
         // Save user
         userRepository.save(user);
 
-        // Authenticate and generate token
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(signupRequest.getUsername(), signupRequest.getPassword()));
-
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        String jwt = jwtUtil.generateToken(authentication);
-
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-        Set<String> roleNames = userDetails.getAuthorities().stream()
-                .map(item -> item.getAuthority())
-                .collect(Collectors.toSet());
-
-        return new AuthResponse(jwt, userDetails.getId(), userDetails.getUsername(),
-                userDetails.getEmail(), roleNames);
+        return "User registered successfully! Please login to continue.";
     }
 
     /**

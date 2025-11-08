@@ -29,8 +29,8 @@ public class AuthController {
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@Valid @RequestBody SignupRequest signupRequest) {
         try {
-            AuthResponse response = authService.signup(signupRequest);
-            return ResponseEntity.ok(response);
+            String message = authService.signup(signupRequest);
+            return ResponseEntity.ok(new MessageResponse(message));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(new MessageResponse(e.getMessage()));
         }
