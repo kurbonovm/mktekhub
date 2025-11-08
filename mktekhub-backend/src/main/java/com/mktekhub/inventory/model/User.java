@@ -9,7 +9,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Entity representing a user in the inventory management system.
+ * Entity representing a user in the mktekhub inventory management system.
  * Users can have multiple roles and perform various operations on inventory and warehouses.
  */
 @Entity

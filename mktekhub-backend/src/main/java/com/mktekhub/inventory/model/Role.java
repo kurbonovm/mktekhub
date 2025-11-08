@@ -8,7 +8,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Entity representing a role in the inventory management system.
+ * Entity representing a role in the mktekhub inventory management system.
  * Roles define permissions and access levels for users (e.g., ADMIN, MANAGER, VIEWER).
  */
 @Entity
