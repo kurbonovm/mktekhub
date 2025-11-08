@@ -152,7 +152,7 @@ public class Warehouse {
             return BigDecimal.ZERO;
         }
         return BigDecimal.valueOf(currentCapacity)
-                .divide(BigDecimal.valueOf(maxCapacity), 2, BigDecimal.ROUND_HALF_UP)
+                .divide(BigDecimal.valueOf(maxCapacity), 2, java.math.RoundingMode.HALF_UP)
                 .multiply(BigDecimal.valueOf(100));
     }
 
