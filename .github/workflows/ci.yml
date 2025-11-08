@@ -19,11 +19,7 @@ jobs:
         with:
           java-version: "17"
           distribution: "temurin"
-         
-      - name: Set up Maven
-        uses: s4u/setup-maven-action@v1.1.0 # Use a reliable community action
-        with:
-          maven-version: '3.9.11' 
+          cache: "maven" 
 
       # 2. Backend Formatting Check (Spotless)
       - name: 🧹 Run Spring Boot Code Formatting Check
