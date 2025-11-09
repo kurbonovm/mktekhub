@@ -1,0 +1,144 @@
+package com.mktekhub.inventory.controller;
+
+import com.mktekhub.inventory.dto.MessageResponse;
+import com.mktekhub.inventory.dto.WarehouseRequest;
+import com.mktekhub.inventory.dto.WarehouseResponse;
+import com.mktekhub.inventory.service.WarehouseService;
+import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+/**
+ * REST controller for warehouse management.
+ */
+@RestController
+@RequestMapping("/api/warehouses")
+@CrossOrigin(origins = "*", maxAge = 3600)
+public class WarehouseController {
+
+    @Autowired
+    private WarehouseService warehouseService;
+
+    /**
+     * Get all warehouses.
+     * Accessible by all authenticated users.
+     * GET /api/warehouses
+     */
+    @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'VIEWER')")
+    public ResponseEntity<List<WarehouseResponse>> getAllWarehouses() {
+        List<WarehouseResponse> warehouses = warehouseService.getAllWarehouses();
+        return ResponseEntity.ok(warehouses);
+    }
+
+    /**
+     * Get all active warehouses.
+     * Accessible by all authenticated users.
+     * GET /api/warehouses/active
+     */
+    @GetMapping("/active")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'VIEWER')")
+    public ResponseEntity<List<WarehouseResponse>> getActiveWarehouses() {
+        List<WarehouseResponse> warehouses = warehouseService.getActiveWarehouses();
+        return ResponseEntity.ok(warehouses);
+    }
+
+    /**
+     * Get warehouses with capacity alerts.
+     * Accessible by ADMIN and MANAGER.
+     * GET /api/warehouses/alerts
+     */
+    @GetMapping("/alerts")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<List<WarehouseResponse>> getWarehousesWithAlerts() {
+        List<WarehouseResponse> warehouses = warehouseService.getWarehousesWithAlerts();
+        return ResponseEntity.ok(warehouses);
+    }
+
+    /**
+     * Get warehouse by ID.
+     * Accessible by all authenticated users.
+     * GET /api/warehouses/{id}
+     */
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'VIEWER')")
+    public ResponseEntity<?> getWarehouseById(@PathVariable Long id) {
+        try {
+            WarehouseResponse warehouse = warehouseService.getWarehouseById(id);
+            return ResponseEntity.ok(warehouse);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new MessageResponse(e.getMessage()));
+        }
+    }
+
+    /**
+     * Create a new warehouse.
+     * Accessible by ADMIN and MANAGER only.
+     * POST /api/warehouses
+     */
+    @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<?> createWarehouse(@Valid @RequestBody WarehouseRequest request) {
+        try {
+            WarehouseResponse warehouse = warehouseService.createWarehouse(request);
+            return ResponseEntity.status(HttpStatus.CREATED).body(warehouse);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(new MessageResponse(e.getMessage()));
+        }
+    }
+
+    /**
+     * Update an existing warehouse.
+     * Accessible by ADMIN and MANAGER only.
+     * PUT /api/warehouses/{id}
+     */
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<?> updateWarehouse(@PathVariable Long id,
+                                              @Valid @RequestBody WarehouseRequest request) {
+        try {
+            WarehouseResponse warehouse = warehouseService.updateWarehouse(id, request);
+            return ResponseEntity.ok(warehouse);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(new MessageResponse(e.getMessage()));
+        }
+    }
+
+    /**
+     * Delete a warehouse (soft delete).
+     * Accessible by ADMIN and MANAGER only.
+     * DELETE /api/warehouses/{id}
+     */
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<?> deleteWarehouse(@PathVariable Long id) {
+        try {
+            warehouseService.deleteWarehouse(id);
+            return ResponseEntity.ok(new MessageResponse("Warehouse deleted successfully"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(new MessageResponse(e.getMessage()));
+        }
+    }
+
+    /**
+     * Permanently delete a warehouse.
+     * Accessible by ADMIN only.
+     * DELETE /api/warehouses/{id}/permanent
+     */
+    @DeleteMapping("/{id}/permanent")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> hardDeleteWarehouse(@PathVariable Long id) {
+        try {
+            warehouseService.hardDeleteWarehouse(id);
+            return ResponseEntity.ok(new MessageResponse("Warehouse permanently deleted"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(new MessageResponse(e.getMessage()));
+        }
+    }
+}
