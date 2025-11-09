@@ -27,8 +27,9 @@ public interface InventoryItemRepository extends JpaRepository<InventoryItem, Lo
     List<InventoryItem> findByWarehouseId(Long warehouseId);
 
     /**
-     * Find all items by category.
+     * Find all items by category (case-insensitive).
      */
+    @Query("SELECT i FROM InventoryItem i WHERE LOWER(i.category) = LOWER(?1)")
     List<InventoryItem> findByCategory(String category);
 
     /**
