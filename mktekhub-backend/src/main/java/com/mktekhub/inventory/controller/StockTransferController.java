@@ -1,5 +1,7 @@
 package com.mktekhub.inventory.controller;
 
+import com.mktekhub.inventory.dto.BulkStockTransferRequest;
+import com.mktekhub.inventory.dto.BulkStockTransferResponse;
 import com.mktekhub.inventory.dto.StockTransferRequest;
 import com.mktekhub.inventory.dto.StockTransferResponse;
 import com.mktekhub.inventory.service.StockTransferService;
@@ -39,5 +41,20 @@ public class StockTransferController {
 
         StockTransferResponse response = stockTransferService.transferStock(request);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    /**
+     * Perform bulk stock transfers
+     * Requires ADMIN or MANAGER role
+     */
+    @PostMapping("/bulk")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    @Operation(summary = "Perform bulk stock transfers",
+               description = "Transfer multiple inventory items in one request. Returns success and failure details for each transfer.")
+    public ResponseEntity<BulkStockTransferResponse> bulkTransferStock(
+            @Valid @RequestBody BulkStockTransferRequest request) {
+
+        BulkStockTransferResponse response = stockTransferService.bulkTransferStock(request);
+        return ResponseEntity.ok(response);
     }
 }

@@ -1,5 +1,7 @@
 package com.mktekhub.inventory.service;
 
+import com.mktekhub.inventory.dto.BulkStockTransferRequest;
+import com.mktekhub.inventory.dto.BulkStockTransferResponse;
 import com.mktekhub.inventory.dto.StockTransferRequest;
 import com.mktekhub.inventory.dto.StockTransferResponse;
 import com.mktekhub.inventory.exception.*;
@@ -12,6 +14,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Service for stock transfer operations between warehouses.
@@ -160,6 +164,46 @@ public class StockTransferService {
 
         // 15. Return response
         return StockTransferResponse.fromEntity(savedActivity);
+    }
+
+    /**
+     * Perform bulk stock transfers
+     * Processes multiple transfers and returns success/failure results
+     * Does not use transactions - continues processing even if some transfers fail
+     */
+    public BulkStockTransferResponse bulkTransferStock(BulkStockTransferRequest request) {
+        List<StockTransferResponse> successResults = new ArrayList<>();
+        List<BulkStockTransferResponse.TransferError> errors = new ArrayList<>();
+
+        List<StockTransferRequest> transfers = request.getTransfers();
+        int totalTransfers = transfers.size();
+
+        for (int i = 0; i < transfers.size(); i++) {
+            StockTransferRequest transferRequest = transfers.get(i);
+            try {
+                StockTransferResponse response = transferStock(transferRequest);
+                successResults.add(response);
+            } catch (Exception e) {
+                BulkStockTransferResponse.TransferError error =
+                    new BulkStockTransferResponse.TransferError(
+                        i,
+                        transferRequest.getItemSku(),
+                        e.getMessage()
+                    );
+                errors.add(error);
+            }
+        }
+
+        int successfulTransfers = successResults.size();
+        int failedTransfers = errors.size();
+
+        return new BulkStockTransferResponse(
+            totalTransfers,
+            successfulTransfers,
+            failedTransfers,
+            successResults,
+            errors
+        );
     }
 
     /**
