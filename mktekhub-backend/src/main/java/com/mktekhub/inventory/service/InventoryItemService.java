@@ -2,6 +2,10 @@ package com.mktekhub.inventory.service;
 
 import com.mktekhub.inventory.dto.InventoryItemRequest;
 import com.mktekhub.inventory.dto.InventoryItemResponse;
+import com.mktekhub.inventory.exception.DuplicateResourceException;
+import com.mktekhub.inventory.exception.InvalidOperationException;
+import com.mktekhub.inventory.exception.ResourceNotFoundException;
+import com.mktekhub.inventory.exception.WarehouseCapacityExceededException;
 import com.mktekhub.inventory.model.InventoryItem;
 import com.mktekhub.inventory.model.Warehouse;
 import com.mktekhub.inventory.repository.InventoryItemRepository;
@@ -40,7 +44,7 @@ public class InventoryItemService {
      */
     public InventoryItemResponse getItemById(Long id) {
         InventoryItem item = inventoryItemRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Inventory item not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("InventoryItem", "id", id));
         return InventoryItemResponse.fromEntity(item);
     }
 
@@ -49,7 +53,7 @@ public class InventoryItemService {
      */
     public InventoryItemResponse getItemBySku(String sku) {
         InventoryItem item = inventoryItemRepository.findBySku(sku)
-                .orElseThrow(() -> new RuntimeException("Inventory item not found with SKU: " + sku));
+                .orElseThrow(() -> new ResourceNotFoundException("InventoryItem", "sku", sku));
         return InventoryItemResponse.fromEntity(item);
     }
 
@@ -107,17 +111,19 @@ public class InventoryItemService {
     public InventoryItemResponse createItem(InventoryItemRequest request) {
         // Check if SKU already exists
         if (inventoryItemRepository.existsBySku(request.getSku())) {
-            throw new RuntimeException("Item with SKU '" + request.getSku() + "' already exists");
+            throw new DuplicateResourceException("InventoryItem", "sku", request.getSku());
         }
 
         // Validate warehouse exists
         Warehouse warehouse = warehouseRepository.findById(request.getWarehouseId())
-                .orElseThrow(() -> new RuntimeException("Warehouse not found with id: " + request.getWarehouseId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Warehouse", "id", request.getWarehouseId()));
 
         // Check warehouse capacity
         if (warehouse.wouldExceedCapacity(request.getQuantity())) {
-            throw new RuntimeException("Adding " + request.getQuantity() + " items would exceed warehouse capacity. " +
-                    "Available capacity: " + warehouse.getAvailableCapacity());
+            throw new WarehouseCapacityExceededException(
+                    warehouse.getName(),
+                    warehouse.getAvailableCapacity(),
+                    request.getQuantity());
         }
 
         // Create inventory item
@@ -145,21 +151,23 @@ public class InventoryItemService {
     @Transactional
     public InventoryItemResponse updateItem(Long id, InventoryItemRequest request) {
         InventoryItem item = inventoryItemRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Inventory item not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("InventoryItem", "id", id));
 
         // Check if new SKU conflicts with existing item
         if (!item.getSku().equals(request.getSku()) && inventoryItemRepository.existsBySku(request.getSku())) {
-            throw new RuntimeException("Item with SKU '" + request.getSku() + "' already exists");
+            throw new DuplicateResourceException("InventoryItem", "sku", request.getSku());
         }
 
         // If warehouse is changing, validate new warehouse and capacity
         if (!item.getWarehouse().getId().equals(request.getWarehouseId())) {
             Warehouse newWarehouse = warehouseRepository.findById(request.getWarehouseId())
-                    .orElseThrow(() -> new RuntimeException("Warehouse not found with id: " + request.getWarehouseId()));
+                    .orElseThrow(() -> new ResourceNotFoundException("Warehouse", "id", request.getWarehouseId()));
 
             if (newWarehouse.wouldExceedCapacity(request.getQuantity())) {
-                throw new RuntimeException("Adding " + request.getQuantity() + " items would exceed warehouse capacity. " +
-                        "Available capacity: " + newWarehouse.getAvailableCapacity());
+                throw new WarehouseCapacityExceededException(
+                        newWarehouse.getName(),
+                        newWarehouse.getAvailableCapacity(),
+                        request.getQuantity());
             }
 
             item.setWarehouse(newWarehouse);
@@ -188,7 +196,7 @@ public class InventoryItemService {
     @Transactional
     public void deleteItem(Long id) {
         InventoryItem item = inventoryItemRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Inventory item not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("InventoryItem", "id", id));
 
         inventoryItemRepository.delete(item);
     }
@@ -199,18 +207,20 @@ public class InventoryItemService {
     @Transactional
     public InventoryItemResponse adjustQuantity(Long id, Integer quantityChange) {
         InventoryItem item = inventoryItemRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Inventory item not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("InventoryItem", "id", id));
 
         int newQuantity = item.getQuantity() + quantityChange;
 
         if (newQuantity < 0) {
-            throw new RuntimeException("Quantity adjustment would result in negative quantity");
+            throw new InvalidOperationException("Quantity adjustment would result in negative quantity");
         }
 
         // Check warehouse capacity if increasing quantity
         if (quantityChange > 0 && item.getWarehouse().wouldExceedCapacity(quantityChange)) {
-            throw new RuntimeException("Adding " + quantityChange + " items would exceed warehouse capacity. " +
-                    "Available capacity: " + item.getWarehouse().getAvailableCapacity());
+            throw new WarehouseCapacityExceededException(
+                    item.getWarehouse().getName(),
+                    item.getWarehouse().getAvailableCapacity(),
+                    quantityChange);
         }
 
         item.setQuantity(newQuantity);

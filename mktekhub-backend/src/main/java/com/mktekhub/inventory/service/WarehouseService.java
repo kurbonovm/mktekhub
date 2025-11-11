@@ -2,6 +2,9 @@ package com.mktekhub.inventory.service;
 
 import com.mktekhub.inventory.dto.WarehouseRequest;
 import com.mktekhub.inventory.dto.WarehouseResponse;
+import com.mktekhub.inventory.exception.DuplicateResourceException;
+import com.mktekhub.inventory.exception.InvalidOperationException;
+import com.mktekhub.inventory.exception.ResourceNotFoundException;
 import com.mktekhub.inventory.model.Warehouse;
 import com.mktekhub.inventory.repository.WarehouseRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,7 +47,7 @@ public class WarehouseService {
      */
     public WarehouseResponse getWarehouseById(Long id) {
         Warehouse warehouse = warehouseRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Warehouse not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Warehouse", "id", id));
         return WarehouseResponse.fromEntity(warehouse);
     }
 
@@ -64,7 +67,7 @@ public class WarehouseService {
     public WarehouseResponse createWarehouse(WarehouseRequest request) {
         // Check if warehouse name already exists
         if (warehouseRepository.existsByName(request.getName())) {
-            throw new RuntimeException("Warehouse with name '" + request.getName() + "' already exists");
+            throw new DuplicateResourceException("Warehouse", "name", request.getName());
         }
 
         Warehouse warehouse = new Warehouse();
@@ -91,12 +94,12 @@ public class WarehouseService {
     @Transactional
     public WarehouseResponse updateWarehouse(Long id, WarehouseRequest request) {
         Warehouse warehouse = warehouseRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Warehouse not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Warehouse", "id", id));
 
         // Check if new name conflicts with existing warehouse
         if (!warehouse.getName().equals(request.getName()) &&
                 warehouseRepository.existsByName(request.getName())) {
-            throw new RuntimeException("Warehouse with name '" + request.getName() + "' already exists");
+            throw new DuplicateResourceException("Warehouse", "name", request.getName());
         }
 
         warehouse.setName(request.getName());
@@ -117,11 +120,11 @@ public class WarehouseService {
     @Transactional
     public void deleteWarehouse(Long id) {
         Warehouse warehouse = warehouseRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Warehouse not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Warehouse", "id", id));
 
         // Check if warehouse has inventory items
         if (warehouse.getCurrentCapacity() > 0) {
-            throw new RuntimeException("Cannot delete warehouse with existing inventory. " +
+            throw new InvalidOperationException("Cannot delete warehouse with existing inventory. " +
                     "Please move or remove all items first.");
         }
 
@@ -136,10 +139,10 @@ public class WarehouseService {
     @Transactional
     public void hardDeleteWarehouse(Long id) {
         Warehouse warehouse = warehouseRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Warehouse not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Warehouse", "id", id));
 
         if (warehouse.getCurrentCapacity() > 0) {
-            throw new RuntimeException("Cannot delete warehouse with existing inventory.");
+            throw new InvalidOperationException("Cannot delete warehouse with existing inventory.");
         }
 
         warehouseRepository.delete(warehouse);
