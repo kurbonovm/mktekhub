@@ -32,8 +32,7 @@ export const WarehousesPage = () => {
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: WarehouseCreateRequest) =>
-      warehouseService.create(data),
+    mutationFn: (data: WarehouseCreateRequest) => warehouseService.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["warehouses"] });
       closeModal();
@@ -41,13 +40,8 @@ export const WarehousesPage = () => {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({
-      id,
-      data,
-    }: {
-      id: number;
-      data: WarehouseUpdateRequest;
-    }) => warehouseService.update(id, data),
+    mutationFn: ({ id, data }: { id: number; data: WarehouseUpdateRequest }) =>
+      warehouseService.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["warehouses"] });
       closeModal();

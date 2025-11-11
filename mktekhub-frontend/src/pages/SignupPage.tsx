@@ -54,8 +54,7 @@ export const SignupPage = () => {
           response?: { data?: { message?: string } };
         };
         setError(
-          error.response?.data?.message ||
-            "Signup failed. Please try again.",
+          error.response?.data?.message || "Signup failed. Please try again.",
         );
       } else {
         setError("Signup failed. Please try again.");

@@ -167,9 +167,7 @@ export const InventoryPage = () => {
   };
 
   const getWarehouseName = (warehouseId: number) => {
-    return (
-      warehouses?.find((w) => w.id === warehouseId)?.name || "Unknown"
-    );
+    return warehouses?.find((w) => w.id === warehouseId)?.name || "Unknown";
   };
 
   if (isLoading) {
