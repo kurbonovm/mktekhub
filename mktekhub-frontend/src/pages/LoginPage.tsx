@@ -18,10 +18,17 @@ export const LoginPage = () => {
     try {
       await login({ username, password });
       navigate("/dashboard");
-    } catch (err: any) {
-      setError(
-        err.response?.data?.message || "Login failed. Please try again.",
-      );
+    } catch (err: unknown) {
+      if (err && typeof err === "object" && "response" in err) {
+        const error = err as {
+          response?: { data?: { message?: string } };
+        };
+        setError(
+          error.response?.data?.message || "Login failed. Please try again.",
+        );
+      } else {
+        setError("Login failed. Please try again.");
+      }
     } finally {
       setIsLoading(false);
     }
