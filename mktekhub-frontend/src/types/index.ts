@@ -130,7 +130,12 @@ export interface TransferError {
 }
 
 // Stock Activity Types
-export type ActivityType = "RECEIVE" | "TRANSFER" | "SALE" | "ADJUSTMENT" | "DELETE";
+export type ActivityType =
+  | "RECEIVE"
+  | "TRANSFER"
+  | "SALE"
+  | "ADJUSTMENT"
+  | "DELETE";
 
 export interface StockActivity {
   id: number;

@@ -18,27 +18,37 @@ export const inventoryService = {
   },
 
   getByWarehouse: async (warehouseId: number): Promise<InventoryItem[]> => {
-    const response = await api.get<InventoryItem[]>(`/inventory/warehouse/${warehouseId}`);
+    const response = await api.get<InventoryItem[]>(
+      `/inventory/warehouse/${warehouseId}`,
+    );
     return response.data;
   },
 
   getByCategory: async (category: string): Promise<InventoryItem[]> => {
-    const response = await api.get<InventoryItem[]>(`/inventory/category/${category}`);
+    const response = await api.get<InventoryItem[]>(
+      `/inventory/category/${category}`,
+    );
     return response.data;
   },
 
   getLowStock: async (): Promise<InventoryItem[]> => {
-    const response = await api.get<InventoryItem[]>("/inventory/alerts/low-stock");
+    const response = await api.get<InventoryItem[]>(
+      "/inventory/alerts/low-stock",
+    );
     return response.data;
   },
 
   getExpired: async (): Promise<InventoryItem[]> => {
-    const response = await api.get<InventoryItem[]>("/inventory/alerts/expired");
+    const response = await api.get<InventoryItem[]>(
+      "/inventory/alerts/expired",
+    );
     return response.data;
   },
 
   getExpiringSoon: async (days: number = 30): Promise<InventoryItem[]> => {
-    const response = await api.get<InventoryItem[]>(`/inventory/alerts/expiring?days=${days}`);
+    const response = await api.get<InventoryItem[]>(
+      `/inventory/alerts/expiring?days=${days}`,
+    );
     return response.data;
   },
 
@@ -47,7 +57,10 @@ export const inventoryService = {
     return response.data;
   },
 
-  update: async (id: number, data: InventoryItemRequest): Promise<InventoryItem> => {
+  update: async (
+    id: number,
+    data: InventoryItemRequest,
+  ): Promise<InventoryItem> => {
     const response = await api.put<InventoryItem>(`/inventory/${id}`, data);
     return response.data;
   },
@@ -56,8 +69,13 @@ export const inventoryService = {
     await api.delete(`/inventory/${id}`);
   },
 
-  adjustQuantity: async (id: number, quantityChange: number): Promise<InventoryItem> => {
-    const response = await api.patch<InventoryItem>(`/inventory/${id}/adjust`, { quantityChange });
+  adjustQuantity: async (
+    id: number,
+    quantityChange: number,
+  ): Promise<InventoryItem> => {
+    const response = await api.patch<InventoryItem>(`/inventory/${id}/adjust`, {
+      quantityChange,
+    });
     return response.data;
   },
 };
