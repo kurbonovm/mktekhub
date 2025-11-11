@@ -44,14 +44,9 @@ public class InventoryItemController {
      */
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'VIEWER')")
-    public ResponseEntity<?> getItemById(@PathVariable Long id) {
-        try {
-            InventoryItemResponse item = inventoryItemService.getItemById(id);
-            return ResponseEntity.ok(item);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new MessageResponse(e.getMessage()));
-        }
+    public ResponseEntity<InventoryItemResponse> getItemById(@PathVariable Long id) {
+        InventoryItemResponse item = inventoryItemService.getItemById(id);
+        return ResponseEntity.ok(item);
     }
 
     /**
@@ -61,14 +56,9 @@ public class InventoryItemController {
      */
     @GetMapping("/sku/{sku}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'VIEWER')")
-    public ResponseEntity<?> getItemBySku(@PathVariable String sku) {
-        try {
-            InventoryItemResponse item = inventoryItemService.getItemBySku(sku);
-            return ResponseEntity.ok(item);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new MessageResponse(e.getMessage()));
-        }
+    public ResponseEntity<InventoryItemResponse> getItemBySku(@PathVariable String sku) {
+        InventoryItemResponse item = inventoryItemService.getItemBySku(sku);
+        return ResponseEntity.ok(item);
     }
 
     /**
@@ -139,13 +129,9 @@ public class InventoryItemController {
      */
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    public ResponseEntity<?> createItem(@Valid @RequestBody InventoryItemRequest request) {
-        try {
-            InventoryItemResponse item = inventoryItemService.createItem(request);
-            return ResponseEntity.status(HttpStatus.CREATED).body(item);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(new MessageResponse(e.getMessage()));
-        }
+    public ResponseEntity<InventoryItemResponse> createItem(@Valid @RequestBody InventoryItemRequest request) {
+        InventoryItemResponse item = inventoryItemService.createItem(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(item);
     }
 
     /**
@@ -155,14 +141,10 @@ public class InventoryItemController {
      */
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    public ResponseEntity<?> updateItem(@PathVariable Long id,
+    public ResponseEntity<InventoryItemResponse> updateItem(@PathVariable Long id,
                                          @Valid @RequestBody InventoryItemRequest request) {
-        try {
-            InventoryItemResponse item = inventoryItemService.updateItem(id, request);
-            return ResponseEntity.ok(item);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(new MessageResponse(e.getMessage()));
-        }
+        InventoryItemResponse item = inventoryItemService.updateItem(id, request);
+        return ResponseEntity.ok(item);
     }
 
     /**
@@ -172,13 +154,9 @@ public class InventoryItemController {
      */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    public ResponseEntity<?> deleteItem(@PathVariable Long id) {
-        try {
-            inventoryItemService.deleteItem(id);
-            return ResponseEntity.ok(new MessageResponse("Inventory item deleted successfully"));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(new MessageResponse(e.getMessage()));
-        }
+    public ResponseEntity<MessageResponse> deleteItem(@PathVariable Long id) {
+        inventoryItemService.deleteItem(id);
+        return ResponseEntity.ok(new MessageResponse("Inventory item deleted successfully"));
     }
 
     /**
@@ -188,19 +166,14 @@ public class InventoryItemController {
      */
     @PatchMapping("/{id}/adjust")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    public ResponseEntity<?> adjustQuantity(@PathVariable Long id,
+    public ResponseEntity<InventoryItemResponse> adjustQuantity(@PathVariable Long id,
                                              @RequestBody Map<String, Integer> request) {
-        try {
-            Integer quantityChange = request.get("quantityChange");
-            if (quantityChange == null) {
-                return ResponseEntity.badRequest()
-                        .body(new MessageResponse("quantityChange is required"));
-            }
-
-            InventoryItemResponse item = inventoryItemService.adjustQuantity(id, quantityChange);
-            return ResponseEntity.ok(item);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(new MessageResponse(e.getMessage()));
+        Integer quantityChange = request.get("quantityChange");
+        if (quantityChange == null) {
+            throw new IllegalArgumentException("quantityChange is required");
         }
+
+        InventoryItemResponse item = inventoryItemService.adjustQuantity(id, quantityChange);
+        return ResponseEntity.ok(item);
     }
 }

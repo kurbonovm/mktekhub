@@ -67,14 +67,9 @@ public class WarehouseController {
      */
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'VIEWER')")
-    public ResponseEntity<?> getWarehouseById(@PathVariable Long id) {
-        try {
-            WarehouseResponse warehouse = warehouseService.getWarehouseById(id);
-            return ResponseEntity.ok(warehouse);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new MessageResponse(e.getMessage()));
-        }
+    public ResponseEntity<WarehouseResponse> getWarehouseById(@PathVariable Long id) {
+        WarehouseResponse warehouse = warehouseService.getWarehouseById(id);
+        return ResponseEntity.ok(warehouse);
     }
 
     /**
@@ -84,13 +79,9 @@ public class WarehouseController {
      */
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    public ResponseEntity<?> createWarehouse(@Valid @RequestBody WarehouseRequest request) {
-        try {
-            WarehouseResponse warehouse = warehouseService.createWarehouse(request);
-            return ResponseEntity.status(HttpStatus.CREATED).body(warehouse);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(new MessageResponse(e.getMessage()));
-        }
+    public ResponseEntity<WarehouseResponse> createWarehouse(@Valid @RequestBody WarehouseRequest request) {
+        WarehouseResponse warehouse = warehouseService.createWarehouse(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(warehouse);
     }
 
     /**
@@ -100,14 +91,10 @@ public class WarehouseController {
      */
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    public ResponseEntity<?> updateWarehouse(@PathVariable Long id,
+    public ResponseEntity<WarehouseResponse> updateWarehouse(@PathVariable Long id,
                                               @Valid @RequestBody WarehouseRequest request) {
-        try {
-            WarehouseResponse warehouse = warehouseService.updateWarehouse(id, request);
-            return ResponseEntity.ok(warehouse);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(new MessageResponse(e.getMessage()));
-        }
+        WarehouseResponse warehouse = warehouseService.updateWarehouse(id, request);
+        return ResponseEntity.ok(warehouse);
     }
 
     /**
@@ -117,13 +104,9 @@ public class WarehouseController {
      */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    public ResponseEntity<?> deleteWarehouse(@PathVariable Long id) {
-        try {
-            warehouseService.deleteWarehouse(id);
-            return ResponseEntity.ok(new MessageResponse("Warehouse deleted successfully"));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(new MessageResponse(e.getMessage()));
-        }
+    public ResponseEntity<MessageResponse> deleteWarehouse(@PathVariable Long id) {
+        warehouseService.deleteWarehouse(id);
+        return ResponseEntity.ok(new MessageResponse("Warehouse deleted successfully"));
     }
 
     /**
@@ -133,12 +116,8 @@ public class WarehouseController {
      */
     @DeleteMapping("/{id}/permanent")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> hardDeleteWarehouse(@PathVariable Long id) {
-        try {
-            warehouseService.hardDeleteWarehouse(id);
-            return ResponseEntity.ok(new MessageResponse("Warehouse permanently deleted"));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(new MessageResponse(e.getMessage()));
-        }
+    public ResponseEntity<MessageResponse> hardDeleteWarehouse(@PathVariable Long id) {
+        warehouseService.hardDeleteWarehouse(id);
+        return ResponseEntity.ok(new MessageResponse("Warehouse permanently deleted"));
     }
 }
