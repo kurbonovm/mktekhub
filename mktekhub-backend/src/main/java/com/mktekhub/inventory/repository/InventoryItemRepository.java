@@ -52,4 +52,11 @@ public interface InventoryItemRepository extends JpaRepository<InventoryItem, Lo
      * Check if an item exists by SKU.
      */
     boolean existsBySku(String sku);
+
+    /**
+     * Find an inventory item by SKU and warehouse ID.
+     * Used for checking if an item already exists in a warehouse during transfers.
+     */
+    @Query("SELECT i FROM InventoryItem i WHERE i.sku = ?1 AND i.warehouse.id = ?2")
+    InventoryItem findBySkuAndWarehouseId(String sku, Long warehouseId);
 }

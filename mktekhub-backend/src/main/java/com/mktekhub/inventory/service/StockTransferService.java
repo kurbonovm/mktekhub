@@ -1,0 +1,174 @@
+package com.mktekhub.inventory.service;
+
+import com.mktekhub.inventory.dto.StockTransferRequest;
+import com.mktekhub.inventory.dto.StockTransferResponse;
+import com.mktekhub.inventory.exception.*;
+import com.mktekhub.inventory.model.*;
+import com.mktekhub.inventory.repository.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+
+/**
+ * Service for stock transfer operations between warehouses.
+ */
+@Service
+public class StockTransferService {
+
+    @Autowired
+    private InventoryItemRepository inventoryItemRepository;
+
+    @Autowired
+    private WarehouseRepository warehouseRepository;
+
+    @Autowired
+    private StockActivityRepository stockActivityRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    /**
+     * Transfer inventory between warehouses
+     * Validates stock availability, warehouse capacity, and creates activity logs
+     */
+    @Transactional
+    public StockTransferResponse transferStock(StockTransferRequest request) {
+        // 1. Validate that source and destination warehouses are different
+        if (request.getSourceWarehouseId().equals(request.getDestinationWarehouseId())) {
+            throw new InvalidOperationException(
+                "Source and destination warehouses must be different");
+        }
+
+        // 2. Find and validate source warehouse
+        Warehouse sourceWarehouse = warehouseRepository.findById(request.getSourceWarehouseId())
+            .orElseThrow(() -> new ResourceNotFoundException(
+                "Warehouse", "id", request.getSourceWarehouseId()));
+
+        if (!sourceWarehouse.getIsActive()) {
+            throw new InvalidOperationException(
+                "Source warehouse '" + sourceWarehouse.getName() + "' is not active");
+        }
+
+        // 3. Find and validate destination warehouse
+        Warehouse destinationWarehouse = warehouseRepository.findById(request.getDestinationWarehouseId())
+            .orElseThrow(() -> new ResourceNotFoundException(
+                "Warehouse", "id", request.getDestinationWarehouseId()));
+
+        if (!destinationWarehouse.getIsActive()) {
+            throw new InvalidOperationException(
+                "Destination warehouse '" + destinationWarehouse.getName() + "' is not active");
+        }
+
+        // 4. Find inventory item in source warehouse
+        InventoryItem sourceItem = inventoryItemRepository.findBySku(request.getItemSku())
+            .orElseThrow(() -> new ResourceNotFoundException(
+                "InventoryItem", "sku", request.getItemSku()));
+
+        // 5. Validate item is in source warehouse
+        if (!sourceItem.getWarehouse().getId().equals(request.getSourceWarehouseId())) {
+            throw new InvalidOperationException(
+                "Item with SKU '" + request.getItemSku() + "' is not in the source warehouse");
+        }
+
+        // 6. Validate sufficient stock in source warehouse
+        if (sourceItem.getQuantity() < request.getQuantity()) {
+            throw new InsufficientStockException(
+                request.getItemSku(),
+                sourceItem.getQuantity(),
+                request.getQuantity());
+        }
+
+        // 7. Check destination warehouse capacity
+        if (destinationWarehouse.wouldExceedCapacity(request.getQuantity())) {
+            throw new WarehouseCapacityExceededException(
+                destinationWarehouse.getName(),
+                destinationWarehouse.getAvailableCapacity(),
+                request.getQuantity());
+        }
+
+        // 8. Get current authenticated user
+        User currentUser = getCurrentUser();
+
+        // 9. Record previous quantities
+        int previousSourceQuantity = sourceItem.getQuantity();
+
+        // 10. Update source item quantity and warehouse capacity
+        sourceItem.setQuantity(sourceItem.getQuantity() - request.getQuantity());
+        sourceWarehouse.setCurrentCapacity(
+            sourceWarehouse.getCurrentCapacity() - request.getQuantity());
+
+        // 11. Check if item already exists in destination warehouse
+        InventoryItem destinationItem = inventoryItemRepository
+            .findBySkuAndWarehouseId(request.getItemSku(), request.getDestinationWarehouseId());
+
+        int previousDestinationQuantity = 0;
+
+        if (destinationItem != null) {
+            // Item exists in destination - update quantity
+            previousDestinationQuantity = destinationItem.getQuantity();
+            destinationItem.setQuantity(destinationItem.getQuantity() + request.getQuantity());
+        } else {
+            // Item doesn't exist in destination - create new entry
+            destinationItem = new InventoryItem();
+            destinationItem.setSku(sourceItem.getSku());
+            destinationItem.setName(sourceItem.getName());
+            destinationItem.setDescription(sourceItem.getDescription());
+            destinationItem.setCategory(sourceItem.getCategory());
+            destinationItem.setBrand(sourceItem.getBrand());
+            destinationItem.setQuantity(request.getQuantity());
+            destinationItem.setUnitPrice(sourceItem.getUnitPrice());
+            destinationItem.setReorderLevel(sourceItem.getReorderLevel());
+            destinationItem.setWarrantyEndDate(sourceItem.getWarrantyEndDate());
+            destinationItem.setExpirationDate(sourceItem.getExpirationDate());
+            destinationItem.setBarcode(sourceItem.getBarcode());
+            destinationItem.setWarehouse(destinationWarehouse);
+        }
+
+        // 12. Update destination warehouse capacity
+        destinationWarehouse.setCurrentCapacity(
+            destinationWarehouse.getCurrentCapacity() + request.getQuantity());
+
+        // 13. Save updated items and warehouses
+        inventoryItemRepository.save(sourceItem);
+        inventoryItemRepository.save(destinationItem);
+        warehouseRepository.save(sourceWarehouse);
+        warehouseRepository.save(destinationWarehouse);
+
+        // 14. Create stock activity record for the transfer
+        StockActivity activity = new StockActivity();
+        activity.setItem(destinationItem);
+        activity.setItemSku(request.getItemSku());
+        activity.setActivityType(ActivityType.TRANSFER);
+        activity.setQuantityChange(request.getQuantity());
+        activity.setPreviousQuantity(previousDestinationQuantity);
+        activity.setNewQuantity(destinationItem.getQuantity());
+        activity.setTimestamp(LocalDateTime.now());
+        activity.setPerformedBy(currentUser);
+        activity.setSourceWarehouse(sourceWarehouse);
+        activity.setDestinationWarehouse(destinationWarehouse);
+        activity.setNotes(request.getNotes() != null ? request.getNotes() :
+            String.format("Transferred %d units from %s to %s",
+                request.getQuantity(),
+                sourceWarehouse.getName(),
+                destinationWarehouse.getName()));
+
+        StockActivity savedActivity = stockActivityRepository.save(activity);
+
+        // 15. Return response
+        return StockTransferResponse.fromEntity(savedActivity);
+    }
+
+    /**
+     * Get the currently authenticated user
+     */
+    private User getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        return userRepository.findByUsername(username)
+            .orElseThrow(() -> new ResourceNotFoundException("User", "username", username));
+    }
+}
