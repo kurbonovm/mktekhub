@@ -4,7 +4,12 @@ import { inventoryService } from "../services/inventoryService";
 import { warehouseService } from "../services/warehouseService";
 import { useAuth } from "../contexts/AuthContext";
 import type { InventoryItem, InventoryItemRequest } from "../types";
-import { SearchBar, InventoryFilters } from "../components/common";
+import {
+  SearchBar,
+  InventoryFilters,
+  ExpirationBadge,
+  WarrantyBadge,
+} from "../components/common";
 import { defaultFilters, type InventoryFilterOptions } from "../types/filters";
 
 export const InventoryPage = () => {
@@ -35,6 +40,10 @@ export const InventoryPage = () => {
     reorderLevel: 0,
     unitPrice: 0,
     warehouseId: 0,
+    expirationDate: undefined,
+    warrantyEndDate: undefined,
+    barcode: undefined,
+    brand: undefined,
   });
 
   const {
@@ -207,10 +216,14 @@ export const InventoryPage = () => {
       name: "",
       description: "",
       category: "",
+      brand: "",
       quantity: 0,
       reorderLevel: 0,
       unitPrice: 0,
       warehouseId: warehouses?.[0]?.id || 0,
+      expirationDate: undefined,
+      warrantyEndDate: undefined,
+      barcode: "",
     });
     setIsModalOpen(true);
   };
@@ -222,10 +235,14 @@ export const InventoryPage = () => {
       name: item.name,
       description: item.description,
       category: item.category,
+      brand: item.brand,
       quantity: item.quantity,
       reorderLevel: item.reorderLevel,
       unitPrice: item.unitPrice,
       warehouseId: item.warehouseId,
+      expirationDate: item.expirationDate,
+      warrantyEndDate: item.warrantyEndDate,
+      barcode: item.barcode,
     });
     setIsModalOpen(true);
   };
@@ -367,6 +384,12 @@ export const InventoryPage = () => {
                 Total Value
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                Expiration
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                Warranty
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                 Actions
               </th>
             </tr>
@@ -374,7 +397,7 @@ export const InventoryPage = () => {
           <tbody className="divide-y divide-gray-200 bg-white">
             {filteredItems.length === 0 ? (
               <tr>
-                <td colSpan={8} className="px-6 py-12 text-center">
+                <td colSpan={10} className="px-6 py-12 text-center">
                   <div className="flex flex-col items-center justify-center">
                     <svg
                       className="h-12 w-12 text-gray-400"
@@ -447,6 +470,18 @@ export const InventoryPage = () => {
                   </td>
                   <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
                     ${item.totalValue?.toFixed(2) || "0.00"}
+                  </td>
+                  <td className="px-6 py-4">
+                    <ExpirationBadge
+                      expirationDate={item.expirationDate}
+                      isExpired={item.isExpired}
+                    />
+                  </td>
+                  <td className="px-6 py-4">
+                    <WarrantyBadge
+                      warrantyEndDate={item.warrantyEndDate}
+                      isWarrantyValid={item.isWarrantyValid}
+                    />
                   </td>
                   <td className="whitespace-nowrap px-6 py-4 text-sm font-medium">
                     {isAdminOrManager ? (
@@ -554,6 +589,23 @@ export const InventoryPage = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
+                    Brand
+                  </label>
+                  <input
+                    type="text"
+                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    value={formData.brand || ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, brand: e.target.value })
+                    }
+                    placeholder="Optional"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
                     Warehouse
                   </label>
                   <select
@@ -573,6 +625,21 @@ export const InventoryPage = () => {
                       </option>
                     ))}
                   </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Barcode
+                  </label>
+                  <input
+                    type="text"
+                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    value={formData.barcode || ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, barcode: e.target.value })
+                    }
+                    placeholder="Optional"
+                  />
                 </div>
               </div>
 
@@ -631,6 +698,49 @@ export const InventoryPage = () => {
                       })
                     }
                   />
+                </div>
+              </div>
+
+              {/* Date Fields */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Expiration Date
+                  </label>
+                  <input
+                    type="date"
+                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    value={formData.expirationDate || ""}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        expirationDate: e.target.value || undefined,
+                      })
+                    }
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    Leave empty for non-perishable items
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Warranty End Date
+                  </label>
+                  <input
+                    type="date"
+                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    value={formData.warrantyEndDate || ""}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        warrantyEndDate: e.target.value || undefined,
+                      })
+                    }
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    Leave empty if no warranty
+                  </p>
                 </div>
               </div>
 
