@@ -340,13 +340,15 @@ export const InventoryPage = () => {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       {/* Breadcrumb Navigation */}
       <Breadcrumb autoGenerate />
 
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-4 flex flex-col gap-4 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Inventory</h1>
+          <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">
+            Inventory
+          </h1>
           <p className="mt-1 text-sm text-gray-500">
             {filteredItems?.length || 0} item
             {filteredItems?.length !== 1 ? "s" : ""} found
@@ -362,7 +364,7 @@ export const InventoryPage = () => {
           <Tooltip content="Add a new inventory item" position="left">
             <button
               onClick={openCreateModal}
-              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:w-auto"
             >
               Add Item
             </button>
@@ -394,8 +396,123 @@ export const InventoryPage = () => {
         />
       </div>
 
-      {/* Inventory Table */}
-      <div className="overflow-hidden rounded-lg bg-white shadow">
+      {/* Mobile Card View - Hidden on MD and larger */}
+      <div className="block space-y-4 md:hidden">
+        {filteredItems.length === 0 ? (
+          <div className="rounded-lg bg-white p-12 text-center shadow">
+            <svg
+              className="mx-auto h-12 w-12 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+              />
+            </svg>
+            <h3 className="mt-2 text-sm font-medium text-gray-900">
+              No items found
+            </h3>
+            <p className="mt-1 text-sm text-gray-500">
+              {searchTerm ||
+              filters.warehouseId !== 0 ||
+              filters.category ||
+              filters.brand
+                ? "Try adjusting your search or filters"
+                : "Get started by adding a new inventory item"}
+            </p>
+          </div>
+        ) : (
+          filteredItems.map((item) => (
+            <div key={item.id} className="rounded-lg bg-white p-4 shadow">
+              <div className="mb-3 flex items-start justify-between">
+                <div>
+                  <h3 className="font-medium text-gray-900">{item.name}</h3>
+                  <p className="mt-1 text-sm text-gray-500">SKU: {item.sku}</p>
+                </div>
+                {item.quantity <= (item.reorderLevel || 0) && (
+                  <span className="rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-800">
+                    Low Stock
+                  </span>
+                )}
+              </div>
+
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Category:</span>
+                  <span className="font-medium">{item.category || "N/A"}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Warehouse:</span>
+                  <span className="font-medium">
+                    {warehouses?.find((w) => w.id === item.warehouseId)?.name ||
+                      "N/A"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Quantity:</span>
+                  <span className="font-medium">{item.quantity}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Unit Price:</span>
+                  <span className="font-medium">
+                    ${(item.unitPrice || 0).toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Total Value:</span>
+                  <span className="font-medium">
+                    ${(item.quantity * (item.unitPrice || 0)).toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Expiration:</span>
+                  <ExpirationBadge
+                    expirationDate={item.expirationDate}
+                    isExpired={item.isExpired}
+                  />
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Warranty:</span>
+                  <WarrantyBadge
+                    warrantyEndDate={item.warrantyEndDate}
+                    isWarrantyValid={item.isWarrantyValid}
+                  />
+                </div>
+              </div>
+
+              {isAdminOrManager && (
+                <div className="mt-4 flex gap-2 border-t pt-3">
+                  <button
+                    onClick={() => openAdjustModal(item)}
+                    className="flex-1 rounded-md bg-green-600 px-3 py-2 text-sm font-medium text-white hover:bg-green-700"
+                  >
+                    Adjust
+                  </button>
+                  <button
+                    onClick={() => openEditModal(item)}
+                    className="flex-1 rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(item.id)}
+                    className="flex-1 rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700"
+                  >
+                    Delete
+                  </button>
+                </div>
+              )}
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Tablet/Desktop Table View - Hidden on small screens */}
+      <div className="hidden overflow-x-auto rounded-lg bg-white shadow md:block">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
@@ -561,13 +678,13 @@ export const InventoryPage = () => {
 
       {/* Create/Edit Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white p-6 shadow-xl">
-            <h2 className="mb-4 text-2xl font-bold text-gray-900">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black bg-opacity-50 sm:items-center">
+          <div className="max-h-[95vh] w-full overflow-y-auto rounded-t-lg bg-white p-4 shadow-xl sm:max-h-[90vh] sm:max-w-2xl sm:rounded-lg sm:p-6">
+            <h2 className="mb-4 text-xl font-bold text-gray-900 sm:text-2xl">
               {editingItem ? "Edit Item" : "Add Item"}
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
                     SKU
@@ -816,9 +933,9 @@ export const InventoryPage = () => {
 
       {/* Adjust Quantity Modal */}
       {isAdjustModalOpen && adjustingItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
-            <h2 className="mb-4 text-2xl font-bold text-gray-900">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black bg-opacity-50 sm:items-center">
+          <div className="w-full max-w-md rounded-t-lg bg-white p-4 shadow-xl sm:rounded-lg sm:p-6">
+            <h2 className="mb-4 text-xl font-bold text-gray-900 sm:text-2xl">
               Adjust Quantity
             </h2>
             <div className="mb-4 rounded-md bg-blue-50 p-4">
