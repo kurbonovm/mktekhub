@@ -133,7 +133,7 @@ export const InventoryFilters: React.FC<InventoryFiltersProps> = ({
                 Warehouse
               </label>
               <select
-                className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-3 text-base focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm"
                 value={filters.warehouseId}
                 onChange={(e) =>
                   handleChange("warehouseId", parseInt(e.target.value))
@@ -154,7 +154,7 @@ export const InventoryFilters: React.FC<InventoryFiltersProps> = ({
                 Category
               </label>
               <select
-                className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-3 text-base focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm"
                 value={filters.category}
                 onChange={(e) => handleChange("category", e.target.value)}
               >
@@ -173,7 +173,7 @@ export const InventoryFilters: React.FC<InventoryFiltersProps> = ({
                 Brand
               </label>
               <select
-                className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-3 text-base focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm"
                 value={filters.brand}
                 onChange={(e) => handleChange("brand", e.target.value)}
               >
@@ -192,7 +192,7 @@ export const InventoryFilters: React.FC<InventoryFiltersProps> = ({
                 Stock Status
               </label>
               <select
-                className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-3 text-base focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm"
                 value={filters.stockStatus}
                 onChange={(e) =>
                   handleChange(
@@ -219,7 +219,7 @@ export const InventoryFilters: React.FC<InventoryFiltersProps> = ({
               <input
                 type="number"
                 min="0"
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-3 text-base focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm"
                 placeholder="Min"
                 value={filters.minQuantity}
                 onChange={(e) => handleChange("minQuantity", e.target.value)}
@@ -233,7 +233,7 @@ export const InventoryFilters: React.FC<InventoryFiltersProps> = ({
               <input
                 type="number"
                 min="0"
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-3 text-base focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm"
                 placeholder="Max"
                 value={filters.maxQuantity}
                 onChange={(e) => handleChange("maxQuantity", e.target.value)}
@@ -249,7 +249,7 @@ export const InventoryFilters: React.FC<InventoryFiltersProps> = ({
                 type="number"
                 min="0"
                 step="0.01"
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-3 text-base focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm"
                 placeholder="Min"
                 value={filters.minPrice}
                 onChange={(e) => handleChange("minPrice", e.target.value)}
@@ -264,7 +264,7 @@ export const InventoryFilters: React.FC<InventoryFiltersProps> = ({
                 type="number"
                 min="0"
                 step="0.01"
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-3 text-base focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm"
                 placeholder="Max"
                 value={filters.maxPrice}
                 onChange={(e) => handleChange("maxPrice", e.target.value)}
@@ -278,7 +278,7 @@ export const InventoryFilters: React.FC<InventoryFiltersProps> = ({
               Expiration Status
             </label>
             <select
-              className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 md:w-1/2 lg:w-1/4"
+              className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-3 text-base focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm md:w-1/2 lg:w-1/4"
               value={filters.expirationStatus}
               onChange={(e) =>
                 handleChange(
