@@ -15,6 +15,8 @@ export interface SignupRequest {
   username: string;
   email: string;
   password: string;
+  firstName: string;
+  lastName: string;
 }
 
 export interface AuthResponse {
@@ -22,6 +24,8 @@ export interface AuthResponse {
   id: number;
   username: string;
   email: string;
+  firstName: string;
+  lastName: string;
   roles: string[];
 }
 
@@ -61,10 +65,8 @@ export interface InventoryItem {
   warrantyEndDate?: string;
   expirationDate?: string;
   barcode?: string;
-  warehouse: {
-    id: number;
-    name: string;
-  };
+  warehouseId: number;
+  warehouseName: string;
   totalValue?: number;
   isLowStock: boolean;
   isExpired: boolean;

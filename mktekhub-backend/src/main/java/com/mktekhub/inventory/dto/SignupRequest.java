@@ -18,6 +18,14 @@ public class SignupRequest {
     @Size(max = 100, message = "Email must not exceed 100 characters")
     private String email;
 
+    @NotBlank(message = "First name is required")
+    @Size(min = 1, max = 50, message = "First name must not exceed 50 characters")
+    private String firstName;
+
+    @NotBlank(message = "Last name is required")
+    @Size(min = 1, max = 50, message = "Last name must not exceed 50 characters")
+    private String lastName;
+
     @NotBlank(message = "Password is required")
     @Size(min = 6, max = 100, message = "Password must be between 6 and 100 characters")
     private String password;
@@ -26,9 +34,11 @@ public class SignupRequest {
     public SignupRequest() {
     }
 
-    public SignupRequest(String username, String email, String password) {
+    public SignupRequest(String username, String email, String firstName, String lastName, String password) {
         this.username = username;
         this.email = email;
+        this.firstName = firstName;
+        this.lastName = lastName;
         this.password = password;
     }
 
@@ -47,6 +57,22 @@ public class SignupRequest {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
     }
 
     public String getPassword() {

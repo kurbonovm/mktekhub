@@ -64,6 +64,8 @@ public class AuthService {
         User user = new User();
         user.setUsername(signupRequest.getUsername());
         user.setEmail(signupRequest.getEmail());
+        user.setFirstName(signupRequest.getFirstName());
+        user.setLastName(signupRequest.getLastName());
         user.setPassword(passwordEncoder.encode(signupRequest.getPassword()));
         user.setIsActive(true);
 
@@ -92,10 +94,10 @@ public class AuthService {
 
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         Set<String> roles = userDetails.getAuthorities().stream()
-                .map(item -> item.getAuthority())
+                .map(item -> item.getAuthority().replace("ROLE_", ""))
                 .collect(Collectors.toSet());
 
         return new AuthResponse(jwt, userDetails.getId(), userDetails.getUsername(),
-                userDetails.getEmail(), roles);
+                userDetails.getEmail(), userDetails.getFirstName(), userDetails.getLastName(), roles);
     }
 }

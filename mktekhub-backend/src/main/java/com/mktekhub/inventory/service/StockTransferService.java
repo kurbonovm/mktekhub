@@ -67,15 +67,15 @@ public class StockTransferService {
                 "Destination warehouse '" + destinationWarehouse.getName() + "' is not active");
         }
 
-        // 4. Find inventory item in source warehouse
-        InventoryItem sourceItem = inventoryItemRepository.findBySku(request.getItemSku())
-            .orElseThrow(() -> new ResourceNotFoundException(
-                "InventoryItem", "sku", request.getItemSku()));
+        // 4. Find inventory item in source warehouse by SKU and warehouse ID
+        InventoryItem sourceItem = inventoryItemRepository
+            .findBySkuAndWarehouseId(request.getItemSku(), request.getSourceWarehouseId());
 
-        // 5. Validate item is in source warehouse
-        if (!sourceItem.getWarehouse().getId().equals(request.getSourceWarehouseId())) {
-            throw new InvalidOperationException(
-                "Item with SKU '" + request.getItemSku() + "' is not in the source warehouse");
+        // 5. Validate item exists in source warehouse
+        if (sourceItem == null) {
+            throw new ResourceNotFoundException(
+                "InventoryItem with SKU '" + request.getItemSku() +
+                "' not found in source warehouse");
         }
 
         // 6. Validate sufficient stock in source warehouse
