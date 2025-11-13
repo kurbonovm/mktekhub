@@ -18,7 +18,8 @@ export const InventoryPage = () => {
 
   // Search and Filter State
   const [searchTerm, setSearchTerm] = useState("");
-  const [filters, setFilters] = useState<InventoryFilterOptions>(defaultFilters);
+  const [filters, setFilters] =
+    useState<InventoryFilterOptions>(defaultFilters);
   const [showFilters, setShowFilters] = useState(false);
 
   // Modal State
@@ -145,7 +146,8 @@ export const InventoryPage = () => {
     // Apply stock status filter
     if (filters.stockStatus !== "all") {
       filtered = filtered.filter((item) => {
-        if (filters.stockStatus === "in-stock") return item.quantity > 0 && !item.isLowStock;
+        if (filters.stockStatus === "in-stock")
+          return item.quantity > 0 && !item.isLowStock;
         if (filters.stockStatus === "low-stock") return item.isLowStock;
         if (filters.stockStatus === "out-of-stock") return item.quantity === 0;
         return true;
@@ -161,7 +163,9 @@ export const InventoryPage = () => {
           if (!item.expirationDate) return false;
           const expirationDate = new Date(item.expirationDate);
           const today = new Date();
-          const thirtyDaysFromNow = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
+          const thirtyDaysFromNow = new Date(
+            today.getTime() + 30 * 24 * 60 * 60 * 1000,
+          );
           return expirationDate <= thirtyDaysFromNow && expirationDate > today;
         }
         if (filters.expirationStatus === "valid") {
@@ -296,8 +300,12 @@ export const InventoryPage = () => {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Inventory</h1>
           <p className="mt-1 text-sm text-gray-500">
-            {filteredItems?.length || 0} item{filteredItems?.length !== 1 ? "s" : ""} found
-            {searchTerm || filters.warehouseId !== 0 || filters.category || filters.brand
+            {filteredItems?.length || 0} item
+            {filteredItems?.length !== 1 ? "s" : ""} found
+            {searchTerm ||
+            filters.warehouseId !== 0 ||
+            filters.category ||
+            filters.brand
               ? ` (filtered from ${inventoryItems?.length || 0} total)`
               : ""}
           </p>
@@ -389,11 +397,17 @@ export const InventoryPage = () => {
                       No items found
                     </h3>
                     <p className="mt-1 text-sm text-gray-500">
-                      {searchTerm || filters.warehouseId !== 0 || filters.category || filters.brand
+                      {searchTerm ||
+                      filters.warehouseId !== 0 ||
+                      filters.category ||
+                      filters.brand
                         ? "Try adjusting your search or filters"
                         : "Get started by adding a new inventory item"}
                     </p>
-                    {(searchTerm || filters.warehouseId !== 0 || filters.category || filters.brand) && (
+                    {(searchTerm ||
+                      filters.warehouseId !== 0 ||
+                      filters.category ||
+                      filters.brand) && (
                       <button
                         onClick={handleResetFilters}
                         className="mt-4 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
@@ -406,65 +420,65 @@ export const InventoryPage = () => {
               </tr>
             ) : (
               filteredItems?.map((item) => (
-              <tr key={item.id} className="hover:bg-gray-50">
-                <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
-                  {item.sku}
-                </td>
-                <td className="px-6 py-4">
-                  <div className="text-sm font-medium text-gray-900">
-                    {item.name}
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    {item.description}
-                  </div>
-                </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                  {item.category || "N/A"}
-                </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                  {item.warehouseName}
-                </td>
-                <td className="whitespace-nowrap px-6 py-4">
-                  <div className="text-sm text-gray-900">{item.quantity}</div>
-                  {item.isLowStock && (
-                    <span className="inline-flex rounded-full bg-red-100 px-2 text-xs font-semibold leading-5 text-red-800">
-                      Low Stock
-                    </span>
-                  )}
-                </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
-                  ${item.unitPrice?.toFixed(2) || "0.00"}
-                </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
-                  ${item.totalValue?.toFixed(2) || "0.00"}
-                </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm font-medium">
-                  {isAdminOrManager ? (
-                    <>
-                      <button
-                        onClick={() => openAdjustModal(item)}
-                        className="mr-2 text-green-600 hover:text-green-900"
-                      >
-                        Adjust
-                      </button>
-                      <button
-                        onClick={() => openEditModal(item)}
-                        className="mr-2 text-blue-600 hover:text-blue-900"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(item.id)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        Delete
-                      </button>
-                    </>
-                  ) : (
-                    <span className="text-gray-400">View Only</span>
-                  )}
-                </td>
-              </tr>
+                <tr key={item.id} className="hover:bg-gray-50">
+                  <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
+                    {item.sku}
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="text-sm font-medium text-gray-900">
+                      {item.name}
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      {item.description}
+                    </div>
+                  </td>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                    {item.category || "N/A"}
+                  </td>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                    {item.warehouseName}
+                  </td>
+                  <td className="whitespace-nowrap px-6 py-4">
+                    <div className="text-sm text-gray-900">{item.quantity}</div>
+                    {item.isLowStock && (
+                      <span className="inline-flex rounded-full bg-red-100 px-2 text-xs font-semibold leading-5 text-red-800">
+                        Low Stock
+                      </span>
+                    )}
+                  </td>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
+                    ${item.unitPrice?.toFixed(2) || "0.00"}
+                  </td>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
+                    ${item.totalValue?.toFixed(2) || "0.00"}
+                  </td>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm font-medium">
+                    {isAdminOrManager ? (
+                      <>
+                        <button
+                          onClick={() => openAdjustModal(item)}
+                          className="mr-2 text-green-600 hover:text-green-900"
+                        >
+                          Adjust
+                        </button>
+                        <button
+                          onClick={() => openEditModal(item)}
+                          className="mr-2 text-blue-600 hover:text-blue-900"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(item.id)}
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          Delete
+                        </button>
+                      </>
+                    ) : (
+                      <span className="text-gray-400">View Only</span>
+                    )}
+                  </td>
+                </tr>
               ))
             )}
           </tbody>

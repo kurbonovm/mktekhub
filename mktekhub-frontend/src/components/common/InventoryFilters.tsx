@@ -87,7 +87,10 @@ export const InventoryFilters: React.FC<InventoryFiltersProps> = ({
   isExpanded,
   onToggle,
 }) => {
-  const handleChange = (key: keyof InventoryFilterOptions, value: string | number) => {
+  const handleChange = (
+    key: keyof InventoryFilterOptions,
+    value: string | number,
+  ) => {
     onFilterChange({
       ...filters,
       [key]: value,
@@ -170,7 +173,9 @@ export const InventoryFilters: React.FC<InventoryFiltersProps> = ({
               <select
                 className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 value={filters.warehouseId}
-                onChange={(e) => handleChange("warehouseId", parseInt(e.target.value))}
+                onChange={(e) =>
+                  handleChange("warehouseId", parseInt(e.target.value))
+                }
               >
                 <option value={0}>All Warehouses</option>
                 {warehouses.map((warehouse) => (
@@ -228,7 +233,10 @@ export const InventoryFilters: React.FC<InventoryFiltersProps> = ({
                 className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 value={filters.stockStatus}
                 onChange={(e) =>
-                  handleChange("stockStatus", e.target.value as InventoryFilterOptions["stockStatus"])
+                  handleChange(
+                    "stockStatus",
+                    e.target.value as InventoryFilterOptions["stockStatus"],
+                  )
                 }
               >
                 <option value="all">All Items</option>
@@ -311,7 +319,10 @@ export const InventoryFilters: React.FC<InventoryFiltersProps> = ({
               className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 md:w-1/2 lg:w-1/4"
               value={filters.expirationStatus}
               onChange={(e) =>
-                handleChange("expirationStatus", e.target.value as InventoryFilterOptions["expirationStatus"])
+                handleChange(
+                  "expirationStatus",
+                  e.target.value as InventoryFilterOptions["expirationStatus"],
+                )
               }
             >
               <option value="all">All Items</option>
