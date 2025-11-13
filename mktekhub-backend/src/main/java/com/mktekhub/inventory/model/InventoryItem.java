@@ -13,16 +13,20 @@ import java.util.List;
 /**
  * Entity representing an inventory item in the mktekhub inventory management system.
  * Items are stored in warehouses and tracked through stock activities.
+ * Same SKU can exist in multiple warehouses (composite unique on sku + warehouse_id).
  */
 @Entity
-@Table(name = "inventory_item")
+@Table(
+    name = "inventory_item",
+    uniqueConstraints = @UniqueConstraint(columnNames = {"sku", "warehouse_id"})
+)
 public class InventoryItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 50)
+    @Column(nullable = false, length = 50)
     private String sku;
 
     @Column(nullable = false, length = 255)

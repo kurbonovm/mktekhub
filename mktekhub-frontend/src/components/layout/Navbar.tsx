@@ -20,7 +20,7 @@ export const Navbar = () => {
   const isAdminOrManager = hasRole("ADMIN") || hasRole("MANAGER");
 
   return (
-    <nav className="bg-blue-600 shadow-lg">
+    <nav className="relative z-50 bg-blue-600 shadow-lg">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
@@ -132,68 +132,77 @@ export const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile menu */}
+      {/* Mobile menu with backdrop */}
       {isMobileMenuOpen && (
-        <div className="md:hidden">
-          <div className="space-y-1 px-2 pb-3 pt-2 sm:px-3">
-            {/* User Info Mobile */}
-            <div className="mb-4 border-b border-blue-500 pb-3">
-              <div className="text-base font-medium text-white">
-                {user?.firstName} {user?.lastName}
-              </div>
-              <div className="text-sm text-blue-200">
-                {user?.roles.join(", ")}
-              </div>
-            </div>
+        <>
+          {/* Backdrop overlay - closes menu when clicked */}
+          <div
+            className="fixed inset-0 top-16 z-40 bg-black/30 md:hidden"
+            onClick={closeMobileMenu}
+          />
 
-            {/* Navigation Links Mobile */}
-            <Link
-              to="/dashboard"
-              className="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-700"
-              onClick={closeMobileMenu}
-            >
-              Dashboard
-            </Link>
-            <Link
-              to="/warehouses"
-              className="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-700"
-              onClick={closeMobileMenu}
-            >
-              Warehouses
-            </Link>
-            <Link
-              to="/inventory"
-              className="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-700"
-              onClick={closeMobileMenu}
-            >
-              Inventory
-            </Link>
-            {isAdminOrManager && (
+          {/* Mobile menu content */}
+          <div className="relative z-50 md:hidden">
+            <div className="space-y-1 px-2 pb-3 pt-2 sm:px-3">
+              {/* User Info Mobile */}
+              <div className="mb-4 border-b border-blue-500 pb-3">
+                <div className="text-base font-medium text-white">
+                  {user?.firstName} {user?.lastName}
+                </div>
+                <div className="text-sm text-blue-200">
+                  {user?.roles.join(", ")}
+                </div>
+              </div>
+
+              {/* Navigation Links Mobile */}
               <Link
-                to="/stock-transfer"
+                to="/dashboard"
                 className="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-700"
                 onClick={closeMobileMenu}
               >
-                Stock Transfer
+                Dashboard
               </Link>
-            )}
-            <Link
-              to="/stock-activity"
-              className="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-700"
-              onClick={closeMobileMenu}
-            >
-              Activity History
-            </Link>
+              <Link
+                to="/warehouses"
+                className="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-700"
+                onClick={closeMobileMenu}
+              >
+                Warehouses
+              </Link>
+              <Link
+                to="/inventory"
+                className="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-700"
+                onClick={closeMobileMenu}
+              >
+                Inventory
+              </Link>
+              {isAdminOrManager && (
+                <Link
+                  to="/stock-transfer"
+                  className="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-700"
+                  onClick={closeMobileMenu}
+                >
+                  Stock Transfer
+                </Link>
+              )}
+              <Link
+                to="/stock-activity"
+                className="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-700"
+                onClick={closeMobileMenu}
+              >
+                Activity History
+              </Link>
 
-            {/* Logout Button Mobile */}
-            <button
-              onClick={handleLogout}
-              className="mt-4 w-full rounded-md bg-blue-700 px-3 py-2 text-base font-medium text-white hover:bg-blue-800"
-            >
-              Logout
-            </button>
+              {/* Logout Button Mobile */}
+              <button
+                onClick={handleLogout}
+                className="mt-4 w-full rounded-md bg-blue-700 px-3 py-2 text-base font-medium text-white hover:bg-blue-800"
+              >
+                Logout
+              </button>
+            </div>
           </div>
-        </div>
+        </>
       )}
     </nav>
   );

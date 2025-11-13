@@ -86,26 +86,19 @@ public class StockTransferService {
                 request.getQuantity());
         }
 
-        // 7. Check destination warehouse capacity
-        if (destinationWarehouse.wouldExceedCapacity(request.getQuantity())) {
-            throw new WarehouseCapacityExceededException(
-                destinationWarehouse.getName(),
-                destinationWarehouse.getAvailableCapacity(),
-                request.getQuantity());
-        }
+        // Note: Warehouse capacity is not updated during transfers since items are just
+        // moving between locations. Capacity tracking is only relevant for add/remove operations.
 
-        // 8. Get current authenticated user
+        // 7. Get current authenticated user
         User currentUser = getCurrentUser();
 
-        // 9. Record previous quantities
+        // 8. Record previous quantities
         int previousSourceQuantity = sourceItem.getQuantity();
 
-        // 10. Update source item quantity and warehouse capacity
+        // 9. Update source item quantity
         sourceItem.setQuantity(sourceItem.getQuantity() - request.getQuantity());
-        sourceWarehouse.setCurrentCapacity(
-            sourceWarehouse.getCurrentCapacity() - request.getQuantity());
 
-        // 11. Check if item already exists in destination warehouse
+        // 10. Check if item already exists in destination warehouse
         InventoryItem destinationItem = inventoryItemRepository
             .findBySkuAndWarehouseId(request.getItemSku(), request.getDestinationWarehouseId());
 
@@ -132,17 +125,11 @@ public class StockTransferService {
             destinationItem.setWarehouse(destinationWarehouse);
         }
 
-        // 12. Update destination warehouse capacity
-        destinationWarehouse.setCurrentCapacity(
-            destinationWarehouse.getCurrentCapacity() + request.getQuantity());
-
-        // 13. Save updated items and warehouses
+        // 11. Save updated inventory items
         inventoryItemRepository.save(sourceItem);
         inventoryItemRepository.save(destinationItem);
-        warehouseRepository.save(sourceWarehouse);
-        warehouseRepository.save(destinationWarehouse);
 
-        // 14. Create stock activity record for the transfer
+        // 12. Create stock activity record for the transfer
         StockActivity activity = new StockActivity();
         activity.setItem(destinationItem);
         activity.setItemSku(request.getItemSku());
@@ -162,7 +149,7 @@ public class StockTransferService {
 
         StockActivity savedActivity = stockActivityRepository.save(activity);
 
-        // 15. Return response
+        // 13. Return response
         return StockTransferResponse.fromEntity(savedActivity);
     }
 
