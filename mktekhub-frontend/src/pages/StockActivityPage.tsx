@@ -7,7 +7,11 @@ export const StockActivityPage = () => {
   const [filterType, setFilterType] = useState<string>("all");
   const [searchSku, setSearchSku] = useState("");
 
-  const { data: activities, isLoading, error } = useQuery({
+  const {
+    data: activities,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["stock-activity"],
     queryFn: () => stockActivityService.getAll(),
   });

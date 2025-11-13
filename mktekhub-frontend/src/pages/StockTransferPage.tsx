@@ -90,9 +90,7 @@ export const StockTransferPage = () => {
 
   return (
     <div className="p-8">
-      <h1 className="mb-8 text-3xl font-bold text-gray-900">
-        Stock Transfer
-      </h1>
+      <h1 className="mb-8 text-3xl font-bold text-gray-900">Stock Transfer</h1>
 
       {/* Transfer Form */}
       <div className="mb-8 rounded-lg bg-white p-6 shadow">
