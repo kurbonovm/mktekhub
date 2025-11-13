@@ -1,14 +1,24 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { inventoryService } from "../services/inventoryService";
 import { warehouseService } from "../services/warehouseService";
 import { useAuth } from "../contexts/AuthContext";
 import type { InventoryItem, InventoryItemRequest } from "../types";
+import { SearchBar, InventoryFilters } from "../components/common";
+import { defaultFilters, type InventoryFilterOptions } from "../types/filters";
 
 export const InventoryPage = () => {
   const queryClient = useQueryClient();
   const { hasRole } = useAuth();
   const isAdminOrManager = hasRole("ADMIN") || hasRole("MANAGER");
+
+  // Search and Filter State
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filters, setFilters] =
+    useState<InventoryFilterOptions>(defaultFilters);
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAdjustModalOpen, setIsAdjustModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
@@ -73,6 +83,122 @@ export const InventoryPage = () => {
       closeAdjustModal();
     },
   });
+
+  // Extract unique categories and brands from inventory
+  const { categories, brands } = useMemo(() => {
+    if (!inventoryItems) return { categories: [], brands: [] };
+
+    const categoriesSet = new Set<string>();
+    const brandsSet = new Set<string>();
+
+    inventoryItems.forEach((item) => {
+      if (item.category) categoriesSet.add(item.category);
+      if (item.brand) brandsSet.add(item.brand);
+    });
+
+    return {
+      categories: Array.from(categoriesSet).sort(),
+      brands: Array.from(brandsSet).sort(),
+    };
+  }, [inventoryItems]);
+
+  // Filter and search logic
+  const filteredItems = useMemo(() => {
+    if (!inventoryItems) return [];
+
+    let filtered = [...inventoryItems];
+
+    // Apply search filter
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      filtered = filtered.filter(
+        (item) =>
+          item.sku.toLowerCase().includes(searchLower) ||
+          item.name.toLowerCase().includes(searchLower) ||
+          item.description?.toLowerCase().includes(searchLower) ||
+          item.category?.toLowerCase().includes(searchLower) ||
+          item.brand?.toLowerCase().includes(searchLower) ||
+          item.barcode?.toLowerCase().includes(searchLower),
+      );
+    }
+
+    // Apply warehouse filter
+    if (filters.warehouseId !== 0) {
+      filtered = filtered.filter(
+        (item) => item.warehouseId === filters.warehouseId,
+      );
+    }
+
+    // Apply category filter
+    if (filters.category) {
+      filtered = filtered.filter((item) => item.category === filters.category);
+    }
+
+    // Apply brand filter
+    if (filters.brand) {
+      filtered = filtered.filter((item) => item.brand === filters.brand);
+    }
+
+    // Apply stock status filter
+    if (filters.stockStatus !== "all") {
+      filtered = filtered.filter((item) => {
+        if (filters.stockStatus === "in-stock")
+          return item.quantity > 0 && !item.isLowStock;
+        if (filters.stockStatus === "low-stock") return item.isLowStock;
+        if (filters.stockStatus === "out-of-stock") return item.quantity === 0;
+        return true;
+      });
+    }
+
+    // Apply expiration status filter
+    if (filters.expirationStatus !== "all") {
+      filtered = filtered.filter((item) => {
+        if (filters.expirationStatus === "expired") return item.isExpired;
+        if (filters.expirationStatus === "expiring-soon") {
+          // Check if expiring within 30 days
+          if (!item.expirationDate) return false;
+          const expirationDate = new Date(item.expirationDate);
+          const today = new Date();
+          const thirtyDaysFromNow = new Date(
+            today.getTime() + 30 * 24 * 60 * 60 * 1000,
+          );
+          return expirationDate <= thirtyDaysFromNow && expirationDate > today;
+        }
+        if (filters.expirationStatus === "valid") {
+          return !item.isExpired && !item.expirationDate;
+        }
+        return true;
+      });
+    }
+
+    // Apply quantity range filter
+    if (filters.minQuantity) {
+      const min = parseFloat(filters.minQuantity);
+      filtered = filtered.filter((item) => item.quantity >= min);
+    }
+    if (filters.maxQuantity) {
+      const max = parseFloat(filters.maxQuantity);
+      filtered = filtered.filter((item) => item.quantity <= max);
+    }
+
+    // Apply price range filter
+    if (filters.minPrice) {
+      const min = parseFloat(filters.minPrice);
+      filtered = filtered.filter((item) => (item.unitPrice || 0) >= min);
+    }
+    if (filters.maxPrice) {
+      const max = parseFloat(filters.maxPrice);
+      filtered = filtered.filter((item) => (item.unitPrice || 0) <= max);
+    }
+
+    return filtered;
+  }, [inventoryItems, searchTerm, filters]);
+
+  // Reset filters handler
+  const handleResetFilters = () => {
+    setFilters(defaultFilters);
+    setSearchTerm("");
+  };
 
   const openCreateModal = () => {
     setEditingItem(null);
@@ -166,8 +292,20 @@ export const InventoryPage = () => {
 
   return (
     <div className="p-8">
-      <div className="mb-8 flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gray-900">Inventory</h1>
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Inventory</h1>
+          <p className="mt-1 text-sm text-gray-500">
+            {filteredItems?.length || 0} item
+            {filteredItems?.length !== 1 ? "s" : ""} found
+            {searchTerm ||
+            filters.warehouseId !== 0 ||
+            filters.category ||
+            filters.brand
+              ? ` (filtered from ${inventoryItems?.length || 0} total)`
+              : ""}
+          </p>
+        </div>
         {isAdminOrManager && (
           <button
             onClick={openCreateModal}
@@ -176,6 +314,30 @@ export const InventoryPage = () => {
             Add Item
           </button>
         )}
+      </div>
+
+      {/* Search Bar */}
+      <div className="mb-4">
+        <SearchBar
+          value={searchTerm}
+          onChange={setSearchTerm}
+          placeholder="Search by SKU, name, description, category, brand, or barcode..."
+          className="w-full"
+        />
+      </div>
+
+      {/* Filters */}
+      <div className="mb-6">
+        <InventoryFilters
+          filters={filters}
+          onFilterChange={setFilters}
+          onReset={handleResetFilters}
+          warehouses={warehouses || []}
+          categories={categories}
+          brands={brands}
+          isExpanded={showFilters}
+          onToggle={() => setShowFilters(!showFilters)}
+        />
       </div>
 
       {/* Inventory Table */}
@@ -210,67 +372,111 @@ export const InventoryPage = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200 bg-white">
-            {inventoryItems?.map((item) => (
-              <tr key={item.id} className="hover:bg-gray-50">
-                <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
-                  {item.sku}
-                </td>
-                <td className="px-6 py-4">
-                  <div className="text-sm font-medium text-gray-900">
-                    {item.name}
+            {filteredItems.length === 0 ? (
+              <tr>
+                <td colSpan={8} className="px-6 py-12 text-center">
+                  <div className="flex flex-col items-center justify-center">
+                    <svg
+                      className="h-12 w-12 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+                      />
+                    </svg>
+                    <h3 className="mt-2 text-sm font-medium text-gray-900">
+                      No items found
+                    </h3>
+                    <p className="mt-1 text-sm text-gray-500">
+                      {searchTerm ||
+                      filters.warehouseId !== 0 ||
+                      filters.category ||
+                      filters.brand
+                        ? "Try adjusting your search or filters"
+                        : "Get started by adding a new inventory item"}
+                    </p>
+                    {(searchTerm ||
+                      filters.warehouseId !== 0 ||
+                      filters.category ||
+                      filters.brand) && (
+                      <button
+                        onClick={handleResetFilters}
+                        className="mt-4 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                      >
+                        Clear filters
+                      </button>
+                    )}
                   </div>
-                  <div className="text-sm text-gray-500">
-                    {item.description}
-                  </div>
-                </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                  {item.category || "N/A"}
-                </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                  {item.warehouseName}
-                </td>
-                <td className="whitespace-nowrap px-6 py-4">
-                  <div className="text-sm text-gray-900">{item.quantity}</div>
-                  {item.isLowStock && (
-                    <span className="inline-flex rounded-full bg-red-100 px-2 text-xs font-semibold leading-5 text-red-800">
-                      Low Stock
-                    </span>
-                  )}
-                </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
-                  ${item.unitPrice?.toFixed(2) || "0.00"}
-                </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
-                  ${item.totalValue?.toFixed(2) || "0.00"}
-                </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm font-medium">
-                  {isAdminOrManager ? (
-                    <>
-                      <button
-                        onClick={() => openAdjustModal(item)}
-                        className="mr-2 text-green-600 hover:text-green-900"
-                      >
-                        Adjust
-                      </button>
-                      <button
-                        onClick={() => openEditModal(item)}
-                        className="mr-2 text-blue-600 hover:text-blue-900"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(item.id)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        Delete
-                      </button>
-                    </>
-                  ) : (
-                    <span className="text-gray-400">View Only</span>
-                  )}
                 </td>
               </tr>
-            ))}
+            ) : (
+              filteredItems?.map((item) => (
+                <tr key={item.id} className="hover:bg-gray-50">
+                  <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
+                    {item.sku}
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="text-sm font-medium text-gray-900">
+                      {item.name}
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      {item.description}
+                    </div>
+                  </td>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                    {item.category || "N/A"}
+                  </td>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                    {item.warehouseName}
+                  </td>
+                  <td className="whitespace-nowrap px-6 py-4">
+                    <div className="text-sm text-gray-900">{item.quantity}</div>
+                    {item.isLowStock && (
+                      <span className="inline-flex rounded-full bg-red-100 px-2 text-xs font-semibold leading-5 text-red-800">
+                        Low Stock
+                      </span>
+                    )}
+                  </td>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
+                    ${item.unitPrice?.toFixed(2) || "0.00"}
+                  </td>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
+                    ${item.totalValue?.toFixed(2) || "0.00"}
+                  </td>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm font-medium">
+                    {isAdminOrManager ? (
+                      <>
+                        <button
+                          onClick={() => openAdjustModal(item)}
+                          className="mr-2 text-green-600 hover:text-green-900"
+                        >
+                          Adjust
+                        </button>
+                        <button
+                          onClick={() => openEditModal(item)}
+                          className="mr-2 text-blue-600 hover:text-blue-900"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(item.id)}
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          Delete
+                        </button>
+                      </>
+                    ) : (
+                      <span className="text-gray-400">View Only</span>
+                    )}
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
