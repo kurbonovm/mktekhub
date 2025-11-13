@@ -4,12 +4,8 @@ import { inventoryService } from "../services/inventoryService";
 import { warehouseService } from "../services/warehouseService";
 import { useAuth } from "../contexts/AuthContext";
 import type { InventoryItem, InventoryItemRequest } from "../types";
-import {
-  SearchBar,
-  InventoryFilters,
-  defaultFilters,
-  type InventoryFilterOptions,
-} from "../components/common";
+import { SearchBar, InventoryFilters } from "../components/common";
+import { defaultFilters, type InventoryFilterOptions } from "../types/filters";
 
 export const InventoryPage = () => {
   const queryClient = useQueryClient();
