@@ -3,18 +3,23 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { inventoryService } from "../services/inventoryService";
 import { warehouseService } from "../services/warehouseService";
 import { useAuth } from "../contexts/AuthContext";
+import { useToast } from "../contexts/ToastContext";
 import type { InventoryItem, InventoryItemRequest } from "../types";
 import {
   SearchBar,
   InventoryFilters,
   ExpirationBadge,
   WarrantyBadge,
+  Breadcrumb,
+  ConfirmDialog,
+  Tooltip,
 } from "../components/common";
 import { defaultFilters, type InventoryFilterOptions } from "../types/filters";
 
 export const InventoryPage = () => {
   const queryClient = useQueryClient();
   const { hasRole } = useAuth();
+  const toast = useToast();
   const isAdminOrManager = hasRole("ADMIN") || hasRole("MANAGER");
 
   // Search and Filter State
@@ -31,6 +36,10 @@ export const InventoryPage = () => {
     null,
   );
   const [adjustQuantity, setAdjustQuantity] = useState(0);
+
+  // Confirmation Dialog State
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<number | null>(null);
   const [formData, setFormData] = useState<InventoryItemRequest>({
     sku: "",
     name: "",
@@ -65,6 +74,10 @@ export const InventoryPage = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["inventory"] });
       closeModal();
+      toast.success("Item created successfully!");
+    },
+    onError: (error) => {
+      toast.error(`Failed to create item: ${(error as Error).message}`);
     },
   });
 
@@ -74,6 +87,10 @@ export const InventoryPage = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["inventory"] });
       closeModal();
+      toast.success("Item updated successfully!");
+    },
+    onError: (error) => {
+      toast.error(`Failed to update item: ${(error as Error).message}`);
     },
   });
 
@@ -81,6 +98,12 @@ export const InventoryPage = () => {
     mutationFn: (id: number) => inventoryService.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["inventory"] });
+      setIsDeleteDialogOpen(false);
+      setItemToDelete(null);
+      toast.success("Item deleted successfully!");
+    },
+    onError: (error) => {
+      toast.error(`Failed to delete item: ${(error as Error).message}`);
     },
   });
 
@@ -90,6 +113,10 @@ export const InventoryPage = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["inventory"] });
       closeAdjustModal();
+      toast.success("Quantity adjusted successfully!");
+    },
+    onError: (error) => {
+      toast.error(`Failed to adjust quantity: ${(error as Error).message}`);
     },
   });
 
@@ -284,8 +311,13 @@ export const InventoryPage = () => {
   };
 
   const handleDelete = (id: number) => {
-    if (window.confirm("Are you sure you want to delete this item?")) {
-      deleteMutation.mutate(id);
+    setItemToDelete(id);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (itemToDelete !== null) {
+      deleteMutation.mutate(itemToDelete);
     }
   };
 
@@ -309,6 +341,9 @@ export const InventoryPage = () => {
 
   return (
     <div className="p-8">
+      {/* Breadcrumb Navigation */}
+      <Breadcrumb autoGenerate />
+
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Inventory</h1>
@@ -324,12 +359,14 @@ export const InventoryPage = () => {
           </p>
         </div>
         {isAdminOrManager && (
-          <button
-            onClick={openCreateModal}
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-          >
-            Add Item
-          </button>
+          <Tooltip content="Add a new inventory item" position="left">
+            <button
+              onClick={openCreateModal}
+              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            >
+              Add Item
+            </button>
+          </Tooltip>
         )}
       </div>
 
@@ -486,24 +523,30 @@ export const InventoryPage = () => {
                   <td className="whitespace-nowrap px-6 py-4 text-sm font-medium">
                     {isAdminOrManager ? (
                       <>
-                        <button
-                          onClick={() => openAdjustModal(item)}
-                          className="mr-2 text-green-600 hover:text-green-900"
-                        >
-                          Adjust
-                        </button>
-                        <button
-                          onClick={() => openEditModal(item)}
-                          className="mr-2 text-blue-600 hover:text-blue-900"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDelete(item.id)}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          Delete
-                        </button>
+                        <Tooltip content="Adjust quantity" position="top">
+                          <button
+                            onClick={() => openAdjustModal(item)}
+                            className="mr-2 text-green-600 hover:text-green-900"
+                          >
+                            Adjust
+                          </button>
+                        </Tooltip>
+                        <Tooltip content="Edit item details" position="top">
+                          <button
+                            onClick={() => openEditModal(item)}
+                            className="mr-2 text-blue-600 hover:text-blue-900"
+                          >
+                            Edit
+                          </button>
+                        </Tooltip>
+                        <Tooltip content="Delete this item" position="top">
+                          <button
+                            onClick={() => handleDelete(item.id)}
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            Delete
+                          </button>
+                        </Tooltip>
                       </>
                     ) : (
                       <span className="text-gray-400">View Only</span>
@@ -825,6 +868,21 @@ export const InventoryPage = () => {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={isDeleteDialogOpen}
+        title="Delete Item"
+        message="Are you sure you want to delete this item? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+        onConfirm={confirmDelete}
+        onCancel={() => {
+          setIsDeleteDialogOpen(false);
+          setItemToDelete(null);
+        }}
+      />
     </div>
   );
 };
