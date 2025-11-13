@@ -10,7 +10,8 @@ export const SignupPage = () => {
     email: "",
     password: "",
     confirmPassword: "",
-    fullName: "",
+    firstName: "",
+    lastName: "",
   });
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -41,7 +42,8 @@ export const SignupPage = () => {
         username: formData.username,
         email: formData.email,
         password: formData.password,
-        fullName: formData.fullName,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
       });
       setSuccessMessage(message);
       // Redirect to login after 2 seconds
@@ -130,19 +132,38 @@ export const SignupPage = () => {
 
             <div>
               <label
-                htmlFor="fullName"
+                htmlFor="firstName"
                 className="block text-sm font-medium text-gray-700"
               >
-                Full Name
+                First Name
               </label>
               <input
-                id="fullName"
-                name="fullName"
+                id="firstName"
+                name="firstName"
                 type="text"
                 required
                 className="mt-1 block w-full rounded-md border-0 px-3 py-2 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
-                placeholder="Enter full name"
-                value={formData.fullName}
+                placeholder="Enter first name"
+                value={formData.firstName}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="lastName"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Last Name
+              </label>
+              <input
+                id="lastName"
+                name="lastName"
+                type="text"
+                required
+                className="mt-1 block w-full rounded-md border-0 px-3 py-2 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
+                placeholder="Enter last name"
+                value={formData.lastName}
                 onChange={handleChange}
               />
             </div>

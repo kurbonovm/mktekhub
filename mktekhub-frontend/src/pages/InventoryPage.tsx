@@ -2,14 +2,13 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { inventoryService } from "../services/inventoryService";
 import { warehouseService } from "../services/warehouseService";
-import type {
-  InventoryItem,
-  InventoryItemCreateRequest,
-  InventoryItemUpdateRequest,
-} from "../types";
+import { useAuth } from "../contexts/AuthContext";
+import type { InventoryItem, InventoryItemRequest } from "../types";
 
 export const InventoryPage = () => {
   const queryClient = useQueryClient();
+  const { hasRole } = useAuth();
+  const isAdminOrManager = hasRole("ADMIN") || hasRole("MANAGER");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAdjustModalOpen, setIsAdjustModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
@@ -17,17 +16,14 @@ export const InventoryPage = () => {
     null,
   );
   const [adjustQuantity, setAdjustQuantity] = useState(0);
-  const [adjustReason, setAdjustReason] = useState("");
-  const [formData, setFormData] = useState<
-    InventoryItemCreateRequest | InventoryItemUpdateRequest
-  >({
+  const [formData, setFormData] = useState<InventoryItemRequest>({
     sku: "",
     name: "",
     description: "",
     category: "",
     quantity: 0,
-    minimumStockLevel: 0,
-    price: 0,
+    reorderLevel: 0,
+    unitPrice: 0,
     warehouseId: 0,
   });
 
@@ -46,8 +42,7 @@ export const InventoryPage = () => {
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: InventoryItemCreateRequest) =>
-      inventoryService.create(data),
+    mutationFn: (data: InventoryItemRequest) => inventoryService.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["inventory"] });
       closeModal();
@@ -55,13 +50,8 @@ export const InventoryPage = () => {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({
-      id,
-      data,
-    }: {
-      id: number;
-      data: InventoryItemUpdateRequest;
-    }) => inventoryService.update(id, data),
+    mutationFn: ({ id, data }: { id: number; data: InventoryItemRequest }) =>
+      inventoryService.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["inventory"] });
       closeModal();
@@ -76,15 +66,8 @@ export const InventoryPage = () => {
   });
 
   const adjustMutation = useMutation({
-    mutationFn: ({
-      id,
-      quantity,
-      reason,
-    }: {
-      id: number;
-      quantity: number;
-      reason: string;
-    }) => inventoryService.adjustQuantity(id, { quantity, reason }),
+    mutationFn: ({ id, quantity }: { id: number; quantity: number }) =>
+      inventoryService.adjustQuantity(id, quantity),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["inventory"] });
       closeAdjustModal();
@@ -99,8 +82,8 @@ export const InventoryPage = () => {
       description: "",
       category: "",
       quantity: 0,
-      minimumStockLevel: 0,
-      price: 0,
+      reorderLevel: 0,
+      unitPrice: 0,
       warehouseId: warehouses?.[0]?.id || 0,
     });
     setIsModalOpen(true);
@@ -114,8 +97,8 @@ export const InventoryPage = () => {
       description: item.description,
       category: item.category,
       quantity: item.quantity,
-      minimumStockLevel: item.minimumStockLevel,
-      price: item.price,
+      reorderLevel: item.reorderLevel,
+      unitPrice: item.unitPrice,
       warehouseId: item.warehouseId,
     });
     setIsModalOpen(true);
@@ -124,7 +107,6 @@ export const InventoryPage = () => {
   const openAdjustModal = (item: InventoryItem) => {
     setAdjustingItem(item);
     setAdjustQuantity(0);
-    setAdjustReason("");
     setIsAdjustModalOpen(true);
   };
 
@@ -137,7 +119,6 @@ export const InventoryPage = () => {
     setIsAdjustModalOpen(false);
     setAdjustingItem(null);
     setAdjustQuantity(0);
-    setAdjustReason("");
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -145,7 +126,7 @@ export const InventoryPage = () => {
     if (editingItem) {
       updateMutation.mutate({ id: editingItem.id, data: formData });
     } else {
-      createMutation.mutate(formData as InventoryItemCreateRequest);
+      createMutation.mutate(formData);
     }
   };
 
@@ -155,7 +136,6 @@ export const InventoryPage = () => {
       adjustMutation.mutate({
         id: adjustingItem.id,
         quantity: adjustQuantity,
-        reason: adjustReason,
       });
     }
   };
@@ -164,10 +144,6 @@ export const InventoryPage = () => {
     if (window.confirm("Are you sure you want to delete this item?")) {
       deleteMutation.mutate(id);
     }
-  };
-
-  const getWarehouseName = (warehouseId: number) => {
-    return warehouses?.find((w) => w.id === warehouseId)?.name || "Unknown";
   };
 
   if (isLoading) {
@@ -192,12 +168,14 @@ export const InventoryPage = () => {
     <div className="p-8">
       <div className="mb-8 flex items-center justify-between">
         <h1 className="text-3xl font-bold text-gray-900">Inventory</h1>
-        <button
-          onClick={openCreateModal}
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-        >
-          Add Item
-        </button>
+        {isAdminOrManager && (
+          <button
+            onClick={openCreateModal}
+            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          >
+            Add Item
+          </button>
+        )}
       </div>
 
       {/* Inventory Table */}
@@ -246,44 +224,50 @@ export const InventoryPage = () => {
                   </div>
                 </td>
                 <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                  {item.category}
+                  {item.category || "N/A"}
                 </td>
                 <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                  {getWarehouseName(item.warehouseId)}
+                  {item.warehouseName}
                 </td>
                 <td className="whitespace-nowrap px-6 py-4">
                   <div className="text-sm text-gray-900">{item.quantity}</div>
-                  {item.quantity <= item.minimumStockLevel && (
+                  {item.isLowStock && (
                     <span className="inline-flex rounded-full bg-red-100 px-2 text-xs font-semibold leading-5 text-red-800">
                       Low Stock
                     </span>
                   )}
                 </td>
                 <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
-                  ${item.price.toFixed(2)}
+                  ${item.unitPrice?.toFixed(2) || "0.00"}
                 </td>
                 <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
-                  ${(item.quantity * item.price).toFixed(2)}
+                  ${item.totalValue?.toFixed(2) || "0.00"}
                 </td>
                 <td className="whitespace-nowrap px-6 py-4 text-sm font-medium">
-                  <button
-                    onClick={() => openAdjustModal(item)}
-                    className="mr-2 text-green-600 hover:text-green-900"
-                  >
-                    Adjust
-                  </button>
-                  <button
-                    onClick={() => openEditModal(item)}
-                    className="mr-2 text-blue-600 hover:text-blue-900"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(item.id)}
-                    className="text-red-600 hover:text-red-900"
-                  >
-                    Delete
-                  </button>
+                  {isAdminOrManager ? (
+                    <>
+                      <button
+                        onClick={() => openAdjustModal(item)}
+                        className="mr-2 text-green-600 hover:text-green-900"
+                      >
+                        Adjust
+                      </button>
+                      <button
+                        onClick={() => openEditModal(item)}
+                        className="mr-2 text-blue-600 hover:text-blue-900"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(item.id)}
+                        className="text-red-600 hover:text-red-900"
+                      >
+                        Delete
+                      </button>
+                    </>
+                  ) : (
+                    <span className="text-gray-400">View Only</span>
+                  )}
                 </td>
               </tr>
             ))}
@@ -408,18 +392,17 @@ export const InventoryPage = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
-                    Min Stock Level
+                    Reorder Level
                   </label>
                   <input
                     type="number"
-                    required
                     min="0"
                     className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    value={formData.minimumStockLevel}
+                    value={formData.reorderLevel || 0}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        minimumStockLevel: parseInt(e.target.value),
+                        reorderLevel: parseInt(e.target.value),
                       })
                     }
                   />
@@ -427,19 +410,18 @@ export const InventoryPage = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
-                    Price
+                    Unit Price
                   </label>
                   <input
                     type="number"
-                    required
                     min="0"
                     step="0.01"
                     className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    value={formData.price}
+                    value={formData.unitPrice || 0}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        price: parseFloat(e.target.value),
+                        unitPrice: parseFloat(e.target.value),
                       })
                     }
                   />
@@ -501,20 +483,10 @@ export const InventoryPage = () => {
                   value={adjustQuantity}
                   onChange={(e) => setAdjustQuantity(parseInt(e.target.value))}
                 />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Reason
-                </label>
-                <textarea
-                  required
-                  rows={3}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  value={adjustReason}
-                  onChange={(e) => setAdjustReason(e.target.value)}
-                  placeholder="Reason for adjustment..."
-                />
+                <p className="mt-1 text-sm text-gray-500">
+                  New quantity will be:{" "}
+                  {(adjustingItem?.quantity || 0) + adjustQuantity}
+                </p>
               </div>
 
               <div className="flex space-x-3">

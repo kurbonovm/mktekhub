@@ -2,13 +2,15 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 
 export const Navbar = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, hasRole } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
     logout();
     navigate("/login");
   };
+
+  const isAdminOrManager = hasRole("ADMIN") || hasRole("MANAGER");
 
   return (
     <nav className="bg-blue-600 shadow-lg">
@@ -40,12 +42,14 @@ export const Navbar = () => {
               >
                 Inventory
               </Link>
-              <Link
-                to="/stock-transfer"
-                className="rounded-md px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
-              >
-                Stock Transfer
-              </Link>
+              {isAdminOrManager && (
+                <Link
+                  to="/stock-transfer"
+                  className="rounded-md px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                >
+                  Stock Transfer
+                </Link>
+              )}
               <Link
                 to="/stock-activity"
                 className="rounded-md px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
@@ -56,7 +60,9 @@ export const Navbar = () => {
           </div>
           <div className="flex items-center space-x-4">
             <div className="text-sm text-white">
-              <span className="font-medium">{user?.fullName}</span>
+              <span className="font-medium">
+                {user?.firstName} {user?.lastName}
+              </span>
               <span className="ml-2 text-blue-200">
                 ({user?.roles.join(", ")})
               </span>

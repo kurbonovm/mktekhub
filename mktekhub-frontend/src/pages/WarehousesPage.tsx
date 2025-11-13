@@ -1,25 +1,22 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { warehouseService } from "../services/warehouseService";
-import type {
-  Warehouse,
-  WarehouseCreateRequest,
-  WarehouseUpdateRequest,
-} from "../types";
+import { useAuth } from "../contexts/AuthContext";
+import type { Warehouse, WarehouseRequest } from "../types";
 
 export const WarehousesPage = () => {
   const queryClient = useQueryClient();
+  const { hasRole } = useAuth();
+  const isAdminOrManager = hasRole("ADMIN") || hasRole("MANAGER");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingWarehouse, setEditingWarehouse] = useState<Warehouse | null>(
     null,
   );
-  const [formData, setFormData] = useState<
-    WarehouseCreateRequest | WarehouseUpdateRequest
-  >({
+  const [formData, setFormData] = useState<WarehouseRequest>({
     name: "",
     location: "",
-    capacity: 0,
-    managerId: 0,
+    maxCapacity: 0,
+    capacityAlertThreshold: 80,
   });
 
   const {
@@ -32,7 +29,7 @@ export const WarehousesPage = () => {
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: WarehouseCreateRequest) => warehouseService.create(data),
+    mutationFn: (data: WarehouseRequest) => warehouseService.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["warehouses"] });
       closeModal();
@@ -40,7 +37,7 @@ export const WarehousesPage = () => {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: WarehouseUpdateRequest }) =>
+    mutationFn: ({ id, data }: { id: number; data: WarehouseRequest }) =>
       warehouseService.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["warehouses"] });
@@ -60,8 +57,8 @@ export const WarehousesPage = () => {
     setFormData({
       name: "",
       location: "",
-      capacity: 0,
-      managerId: 0,
+      maxCapacity: 0,
+      capacityAlertThreshold: 80,
     });
     setIsModalOpen(true);
   };
@@ -71,8 +68,8 @@ export const WarehousesPage = () => {
     setFormData({
       name: warehouse.name,
       location: warehouse.location,
-      capacity: warehouse.capacity,
-      managerId: warehouse.managerId,
+      maxCapacity: warehouse.maxCapacity,
+      capacityAlertThreshold: warehouse.capacityAlertThreshold,
     });
     setIsModalOpen(true);
   };
@@ -83,8 +80,8 @@ export const WarehousesPage = () => {
     setFormData({
       name: "",
       location: "",
-      capacity: 0,
-      managerId: 0,
+      maxCapacity: 0,
+      capacityAlertThreshold: 80,
     });
   };
 
@@ -93,7 +90,7 @@ export const WarehousesPage = () => {
     if (editingWarehouse) {
       updateMutation.mutate({ id: editingWarehouse.id, data: formData });
     } else {
-      createMutation.mutate(formData as WarehouseCreateRequest);
+      createMutation.mutate(formData);
     }
   };
 
@@ -125,12 +122,14 @@ export const WarehousesPage = () => {
     <div className="p-8">
       <div className="mb-8 flex items-center justify-between">
         <h1 className="text-3xl font-bold text-gray-900">Warehouses</h1>
-        <button
-          onClick={openCreateModal}
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-        >
-          Add Warehouse
-        </button>
+        {isAdminOrManager && (
+          <button
+            onClick={openCreateModal}
+            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          >
+            Add Warehouse
+          </button>
+        )}
       </div>
 
       {/* Warehouses Grid */}
@@ -149,12 +148,12 @@ export const WarehousesPage = () => {
               </div>
               <span
                 className={`rounded-full px-3 py-1 text-xs font-medium ${
-                  warehouse.active
+                  warehouse.isActive
                     ? "bg-green-100 text-green-800"
                     : "bg-red-100 text-red-800"
                 }`}
               >
-                {warehouse.active ? "Active" : "Inactive"}
+                {warehouse.isActive ? "Active" : "Inactive"}
               </span>
             </div>
 
@@ -162,23 +161,19 @@ export const WarehousesPage = () => {
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Capacity:</span>
                 <span className="font-medium text-gray-900">
-                  {warehouse.currentOccupancy} / {warehouse.capacity}
+                  {warehouse.currentCapacity} / {warehouse.maxCapacity}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Utilization:</span>
                 <span className="font-medium text-gray-900">
-                  {(
-                    (warehouse.currentOccupancy / warehouse.capacity) *
-                    100
-                  ).toFixed(1)}
-                  %
+                  {warehouse.utilizationPercentage.toFixed(1)}%
                 </span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Manager ID:</span>
+                <span className="text-gray-600">Alert Threshold:</span>
                 <span className="font-medium text-gray-900">
-                  {warehouse.managerId}
+                  {warehouse.capacityAlertThreshold}%
                 </span>
               </div>
             </div>
@@ -187,33 +182,34 @@ export const WarehousesPage = () => {
             <div className="mb-4 h-2 w-full overflow-hidden rounded-full bg-gray-200">
               <div
                 className={`h-full ${
-                  (warehouse.currentOccupancy / warehouse.capacity) * 100 > 90
+                  warehouse.utilizationPercentage > 90
                     ? "bg-red-600"
-                    : (warehouse.currentOccupancy / warehouse.capacity) * 100 >
-                        75
+                    : warehouse.utilizationPercentage > 75
                       ? "bg-yellow-600"
                       : "bg-green-600"
                 }`}
                 style={{
-                  width: `${(warehouse.currentOccupancy / warehouse.capacity) * 100}%`,
+                  width: `${warehouse.utilizationPercentage}%`,
                 }}
               />
             </div>
 
-            <div className="flex space-x-2">
-              <button
-                onClick={() => openEditModal(warehouse)}
-                className="flex-1 rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
-              >
-                Edit
-              </button>
-              <button
-                onClick={() => handleDelete(warehouse.id)}
-                className="flex-1 rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700"
-              >
-                Delete
-              </button>
-            </div>
+            {isAdminOrManager && (
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => openEditModal(warehouse)}
+                  className="flex-1 rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => handleDelete(warehouse.id)}
+                  className="flex-1 rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700"
+                >
+                  Delete
+                </button>
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -266,22 +262,22 @@ export const WarehousesPage = () => {
 
               <div>
                 <label
-                  htmlFor="capacity"
+                  htmlFor="maxCapacity"
                   className="block text-sm font-medium text-gray-700"
                 >
-                  Capacity
+                  Max Capacity
                 </label>
                 <input
                   type="number"
-                  id="capacity"
+                  id="maxCapacity"
                   required
                   min="1"
                   className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  value={formData.capacity}
+                  value={formData.maxCapacity}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      capacity: parseInt(e.target.value),
+                      maxCapacity: parseInt(e.target.value),
                     })
                   }
                 />
@@ -289,22 +285,23 @@ export const WarehousesPage = () => {
 
               <div>
                 <label
-                  htmlFor="managerId"
+                  htmlFor="capacityAlertThreshold"
                   className="block text-sm font-medium text-gray-700"
                 >
-                  Manager ID
+                  Capacity Alert Threshold (%)
                 </label>
                 <input
                   type="number"
-                  id="managerId"
+                  id="capacityAlertThreshold"
                   required
-                  min="1"
+                  min="0"
+                  max="100"
                   className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  value={formData.managerId}
+                  value={formData.capacityAlertThreshold}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      managerId: parseInt(e.target.value),
+                      capacityAlertThreshold: parseFloat(e.target.value),
                     })
                   }
                 />

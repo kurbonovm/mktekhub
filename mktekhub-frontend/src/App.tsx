@@ -8,6 +8,8 @@ import { SignupPage } from "./pages/SignupPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { WarehousesPage } from "./pages/WarehousesPage";
 import { InventoryPage } from "./pages/InventoryPage";
+import { StockTransferPage } from "./pages/StockTransferPage";
+import { StockActivityPage } from "./pages/StockActivityPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -52,6 +54,26 @@ function App() {
                 <ProtectedRoute>
                   <Layout>
                     <InventoryPage />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/stock-transfer"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <StockTransferPage />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/stock-activity"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <StockActivityPage />
                   </Layout>
                 </ProtectedRoute>
               }
