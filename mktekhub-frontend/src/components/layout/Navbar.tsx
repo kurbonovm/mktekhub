@@ -56,12 +56,20 @@ export const Navbar = () => {
               Inventory
             </Link>
             {isAdminOrManager && (
-              <Link
-                to="/stock-transfer"
-                className="rounded-md px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
-              >
-                Stock Transfer
-              </Link>
+              <>
+                <Link
+                  to="/stock-transfer"
+                  className="rounded-md px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                >
+                  Stock Transfer
+                </Link>
+                <Link
+                  to="/bulk-transfer"
+                  className="rounded-md px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                >
+                  Bulk Transfer
+                </Link>
+              </>
             )}
             <Link
               to="/stock-activity"
@@ -190,13 +198,22 @@ export const Navbar = () => {
                 Inventory
               </Link>
               {isAdminOrManager && (
-                <Link
-                  to="/stock-transfer"
-                  className="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-700"
-                  onClick={closeMobileMenu}
-                >
-                  Stock Transfer
-                </Link>
+                <>
+                  <Link
+                    to="/stock-transfer"
+                    className="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-700"
+                    onClick={closeMobileMenu}
+                  >
+                    Stock Transfer
+                  </Link>
+                  <Link
+                    to="/bulk-transfer"
+                    className="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-700"
+                    onClick={closeMobileMenu}
+                  >
+                    Bulk Transfer
+                  </Link>
+                </>
               )}
               <Link
                 to="/stock-activity"

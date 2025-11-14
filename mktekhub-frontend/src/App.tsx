@@ -11,6 +11,7 @@ import { DashboardPage } from "./pages/DashboardPage";
 import { WarehousesPage } from "./pages/WarehousesPage";
 import { InventoryPage } from "./pages/InventoryPage";
 import { StockTransferPage } from "./pages/StockTransferPage";
+import { BulkTransferPage } from "./pages/BulkTransferPage";
 import { StockActivityPage } from "./pages/StockActivityPage";
 import { ReportsPage } from "./pages/ReportsPage";
 import { CustomReportPage } from "./pages/CustomReportPage";
@@ -69,6 +70,16 @@ function App() {
                   <ProtectedRoute>
                     <Layout>
                       <StockTransferPage />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/bulk-transfer"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <BulkTransferPage />
                     </Layout>
                   </ProtectedRoute>
                 }
