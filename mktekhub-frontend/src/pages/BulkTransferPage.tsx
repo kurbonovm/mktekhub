@@ -395,38 +395,67 @@ export const BulkTransferPage = () => {
 
             {/* Transfer Summary */}
             <div className="mb-6 space-y-3">
-              {transfers.map((transfer, index) => (
-                <div
-                  key={transfer.id}
-                  className="rounded-lg border border-gray-200 bg-gray-50 p-4"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <p className="font-semibold text-gray-900">
-                        {index + 1}. {transfer.itemName || transfer.itemSku}
-                      </p>
-                      <p className="mt-1 text-sm text-gray-600">
-                        <span className="font-medium">
-                          {transfer.quantity} units
-                        </span>{" "}
-                        from{" "}
-                        <span className="font-medium">
-                          {transfer.sourceWarehouseName}
-                        </span>{" "}
-                        to{" "}
-                        <span className="font-medium">
-                          {transfer.destinationWarehouseName}
-                        </span>
-                      </p>
-                      {transfer.notes && (
-                        <p className="mt-1 text-sm italic text-gray-500">
-                          Note: {transfer.notes}
+              {transfers.map((transfer, index) => {
+                const item = inventoryItems?.find(
+                  (i) =>
+                    i.sku === transfer.itemSku &&
+                    i.warehouseId === transfer.sourceWarehouseId,
+                );
+                const isExpired =
+                  item?.expirationDate &&
+                  new Date(item.expirationDate) < new Date();
+
+                return (
+                  <div
+                    key={transfer.id}
+                    className={`rounded-lg border p-4 ${
+                      isExpired
+                        ? "border-red-300 bg-red-50"
+                        : "border-gray-200 bg-gray-50"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <p className="font-semibold text-gray-900">
+                          {index + 1}. {transfer.itemName || transfer.itemSku}
+                          {isExpired && (
+                            <span className="ml-2 rounded-full bg-red-600 px-2 py-0.5 text-xs text-white">
+                              EXPIRED
+                            </span>
+                          )}
                         </p>
-                      )}
+                        <p className="mt-1 text-sm text-gray-600">
+                          <span className="font-medium">
+                            {transfer.quantity} units
+                          </span>{" "}
+                          from{" "}
+                          <span className="font-medium">
+                            {transfer.sourceWarehouseName}
+                          </span>{" "}
+                          to{" "}
+                          <span className="font-medium">
+                            {transfer.destinationWarehouseName}
+                          </span>
+                        </p>
+                        {isExpired && (
+                          <p className="mt-1 text-xs text-red-600">
+                            ⚠ Expired on{" "}
+                            {new Date(
+                              item!.expirationDate!,
+                            ).toLocaleDateString()}{" "}
+                            - Consider disposing instead
+                          </p>
+                        )}
+                        {transfer.notes && (
+                          <p className="mt-1 text-sm italic text-gray-500">
+                            Note: {transfer.notes}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Warning */}
