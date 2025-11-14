@@ -383,8 +383,8 @@ export const BulkTransferPage = () => {
 
       {/* Confirmation Dialog */}
       {showConfirmation && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="max-h-[80vh] w-full max-w-3xl overflow-y-auto rounded-lg bg-white p-6 shadow-xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/25">
+          <div className="relative max-h-[80vh] w-full max-w-3xl overflow-y-auto rounded-lg bg-white p-6 shadow-2xl border border-gray-200">
             <h2 className="mb-4 text-2xl font-bold text-gray-900">
               Confirm Bulk Transfer
             </h2>

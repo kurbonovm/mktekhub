@@ -285,36 +285,40 @@ export const StockTransferPage = () => {
                 </div>
               </div>
             ) : (
-              <div className="mt-2 flex items-center justify-between rounded-md border border-blue-200 bg-blue-50 p-4">
-                <div>
-                  <div className="font-medium text-gray-900">
-                    {selectedItem?.sku} - {selectedItem?.name}
+              <div className="mt-2 rounded-md border border-blue-200 bg-blue-50 p-3 sm:p-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex-1">
+                    <div className="font-medium text-gray-900">
+                      {selectedItem?.sku} - {selectedItem?.name}
+                    </div>
+                    <div className="mt-1 text-sm text-gray-600">
+                      {selectedItem?.category} • {selectedItem?.brand}
+                    </div>
+                    <div className="mt-1 text-sm text-gray-600">
+                      Total available: {selectedItem?.totalQuantity} units
+                    </div>
                   </div>
-                  <div className="text-sm text-gray-600">
-                    {selectedItem?.category} • {selectedItem?.brand} • Total:{" "}
-                    {selectedItem?.totalQuantity} units
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setFormData({
+                        itemSku: "",
+                        sourceWarehouseId: 0,
+                        destinationWarehouseId: 0,
+                        quantity: 0,
+                        notes: "",
+                      })
+                    }
+                    className="rounded-md bg-white px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    Change Item
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setFormData({
-                      itemSku: "",
-                      sourceWarehouseId: 0,
-                      destinationWarehouseId: 0,
-                      quantity: 0,
-                      notes: "",
-                    })
-                  }
-                  className="text-sm text-blue-600 hover:text-blue-800"
-                >
-                  Change
-                </button>
               </div>
             )}
           </div>
 
-          {/* Step 2: Stock Locations Table */}
+          {/* Step 2: Stock Locations - Responsive Table/Cards */}
           {formData.itemSku && selectedItem && (
             <div>
               <label className="block text-sm font-medium text-gray-700">
@@ -323,7 +327,9 @@ export const StockTransferPage = () => {
               <p className="mt-1 text-sm text-gray-500">
                 Choose the warehouse to transfer from
               </p>
-              <div className="mt-2 overflow-x-auto rounded-md border border-gray-300">
+
+              {/* Desktop Table View - Hidden on mobile */}
+              <div className="mt-2 hidden overflow-x-auto rounded-md border border-gray-300 sm:block">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
@@ -384,6 +390,57 @@ export const StockTransferPage = () => {
                     ))}
                   </tbody>
                 </table>
+              </div>
+
+              {/* Mobile Card View - Hidden on desktop */}
+              <div className="mt-2 space-y-3 sm:hidden">
+                {availableSourceWarehouses.map((location) => (
+                  <div
+                    key={location.warehouseId}
+                    className={`rounded-lg border p-4 ${
+                      formData.sourceWarehouseId === location.warehouseId
+                        ? "border-blue-500 bg-blue-50"
+                        : "border-gray-300 bg-white"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h4 className="font-medium text-gray-900">
+                          {location.warehouseName}
+                        </h4>
+                        <p className="mt-1 text-sm text-gray-600">
+                          Available:{" "}
+                          <span
+                            className={`font-medium ${
+                              location.quantity < 10
+                                ? "text-red-600"
+                                : location.quantity < 50
+                                  ? "text-yellow-600"
+                                  : "text-green-600"
+                            }`}
+                          >
+                            {location.quantity} units
+                          </span>
+                        </p>
+                      </div>
+                      {formData.sourceWarehouseId === location.warehouseId ? (
+                        <span className="flex items-center rounded-full bg-blue-600 px-3 py-1 text-sm font-medium text-white">
+                          ✓ Selected
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleSourceSelect(location.warehouseId)
+                          }
+                          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                        >
+                          Select
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}
@@ -522,11 +579,11 @@ export const StockTransferPage = () => {
           {/* Submit Button */}
           {formData.sourceWarehouseId > 0 &&
             formData.destinationWarehouseId > 0 && (
-              <div className="flex justify-end">
+              <div className="flex justify-end pt-2">
                 <button
                   type="submit"
                   disabled={transferMutation.isPending}
-                  className="w-full rounded-md bg-blue-600 px-6 py-3 text-sm font-medium text-white hover:bg-blue-700 disabled:bg-gray-400 sm:w-auto sm:py-2"
+                  className="w-full rounded-md bg-blue-600 px-6 py-3 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-400 sm:w-auto sm:py-2 sm:text-sm"
                 >
                   {transferMutation.isPending
                     ? "Processing..."
