@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { warehouseService } from "../services/warehouseService";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../contexts/ToastContext";
+import { createMutationErrorHandler } from "../utils/errorHandler";
 import { ConfirmDialog, CardSkeleton } from "../components/common";
 import type { Warehouse, WarehouseRequest } from "../types";
 
@@ -43,12 +44,7 @@ export const WarehousesPage = () => {
       toast.success("Warehouse created successfully");
       closeModal();
     },
-    onError: (error: unknown) => {
-      const message =
-        (error as { response?: { data?: { message?: string } } })?.response
-          ?.data?.message || "Failed to create warehouse";
-      toast.error(message);
-    },
+    onError: createMutationErrorHandler(toast, "Failed to create warehouse"),
   });
 
   const updateMutation = useMutation({
@@ -59,12 +55,7 @@ export const WarehousesPage = () => {
       toast.success("Warehouse updated successfully");
       closeModal();
     },
-    onError: (error: unknown) => {
-      const message =
-        (error as { response?: { data?: { message?: string } } })?.response
-          ?.data?.message || "Failed to update warehouse";
-      toast.error(message);
-    },
+    onError: createMutationErrorHandler(toast, "Failed to update warehouse"),
   });
 
   const deleteMutation = useMutation({
@@ -73,12 +64,7 @@ export const WarehousesPage = () => {
       queryClient.invalidateQueries({ queryKey: ["warehouses"] });
       toast.success("Warehouse deleted successfully");
     },
-    onError: (error: unknown) => {
-      const message =
-        (error as { response?: { data?: { message?: string } } })?.response
-          ?.data?.message || "Failed to delete warehouse";
-      toast.error(message);
-    },
+    onError: createMutationErrorHandler(toast, "Failed to delete warehouse"),
   });
 
   const openCreateModal = () => {

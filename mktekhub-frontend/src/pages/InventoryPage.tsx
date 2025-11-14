@@ -16,6 +16,7 @@ import {
   TableSkeleton,
   CardSkeleton,
 } from "../components/common";
+import { InventoryTable, InventoryMobileCard } from "../components/inventory";
 import { defaultFilters, type InventoryFilterOptions } from "../types/filters";
 
 export const InventoryPage = () => {
