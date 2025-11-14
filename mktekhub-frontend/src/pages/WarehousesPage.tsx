@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { warehouseService } from "../services/warehouseService";
 import { useAuth } from "../contexts/AuthContext";
@@ -141,6 +141,19 @@ export const WarehousesPage = () => {
     setWarehouseToDelete(null);
   };
 
+  // Keyboard navigation - close modal with Escape key
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (isModalOpen) closeModal();
+        if (deleteConfirmOpen) handleDeleteCancel();
+      }
+    };
+
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [isModalOpen, deleteConfirmOpen]);
+
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -275,9 +288,17 @@ export const WarehousesPage = () => {
 
       {/* Create/Edit Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modal-title"
+        >
           <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
-            <h2 className="mb-4 text-2xl font-bold text-gray-900">
+            <h2
+              id="modal-title"
+              className="mb-4 text-2xl font-bold text-gray-900"
+            >
               {editingWarehouse ? "Edit Warehouse" : "Add Warehouse"}
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">

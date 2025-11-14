@@ -21,7 +21,10 @@ export const Navbar = () => {
   const isAdminOrManager = hasRole("ADMIN") || hasRole("MANAGER");
 
   return (
-    <nav className="sticky top-0 z-50 bg-blue-600 shadow-lg">
+    <nav
+      className="sticky top-0 z-50 bg-blue-600 shadow-lg"
+      aria-label="Main navigation"
+    >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
@@ -104,6 +107,7 @@ export const Navbar = () => {
             <button
               onClick={handleLogout}
               className="rounded-md bg-blue-700 px-4 py-2 text-sm font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-600"
+              aria-label="Logout from application"
             >
               Logout
             </button>
@@ -114,9 +118,12 @@ export const Navbar = () => {
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="inline-flex items-center justify-center rounded-md p-2 text-white hover:bg-blue-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
-              aria-expanded="false"
+              aria-expanded={isMobileMenuOpen}
+              aria-label="Toggle navigation menu"
             >
-              <span className="sr-only">Open main menu</span>
+              <span className="sr-only">
+                {isMobileMenuOpen ? "Close" : "Open"} main menu
+              </span>
               {!isMobileMenuOpen ? (
                 <svg
                   className="block h-6 w-6"
