@@ -45,6 +45,9 @@ public class InventoryItemService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private ActivityLoggerService activityLoggerService;
+
     /**
      * Get all inventory items.
      */
@@ -330,16 +333,7 @@ public class InventoryItemService {
 
         // Log ADJUSTMENT activity
         User currentUser = getCurrentUser();
-        StockActivity activity = new StockActivity();
-        activity.setItem(updated);
-        activity.setItemSku(updated.getSku());
-        activity.setActivityType(ActivityType.ADJUSTMENT);
-        activity.setQuantityChange(quantityChange);
-        activity.setPreviousQuantity(oldQuantity);
-        activity.setNewQuantity(newQuantity);
-        activity.setPerformedBy(currentUser);
-        activity.setNotes("Manual quantity adjustment: " + (quantityChange > 0 ? "+" : "") + quantityChange);
-        stockActivityRepository.save(activity);
+        activityLoggerService.logAdjustment(updated, quantityChange, oldQuantity, newQuantity, currentUser);
 
         return InventoryItemResponse.fromEntity(updated);
     }

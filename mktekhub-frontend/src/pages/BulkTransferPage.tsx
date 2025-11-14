@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "../contexts/ToastContext";
 import { inventoryService } from "../services/inventoryService";
 import { warehouseService } from "../services/warehouseService";
+import { createMutationErrorHandler } from "../utils/errorHandler";
 import api from "../services/api";
 import type {
   StockTransferRequest,
@@ -60,12 +61,10 @@ export const BulkTransferPage = () => {
       }
       setShowConfirmation(false);
     },
-    onError: (error: unknown) => {
-      const message =
-        (error as { response?: { data?: { message?: string } } })?.response
-          ?.data?.message || "Failed to process bulk transfer";
-      toast.error(message);
-    },
+    onError: createMutationErrorHandler(
+      toast,
+      "Failed to process bulk transfer",
+    ),
   });
 
   const addTransferRow = () => {

@@ -1,12 +1,16 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import mkth from "./mkth.png";
 
 export const Navbar = () => {
   const { user, logout, hasRole } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Helper to check if link is active
+  const isActive = (path: string) => location.pathname === path;
 
   const handleLogout = () => {
     logout();
@@ -39,22 +43,34 @@ export const Navbar = () => {
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden items-baseline space-x-4 md:flex">
+          <div className="hidden items-baseline space-x-2 md:flex">
             <Link
               to="/dashboard"
-              className="rounded-md px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                isActive("/dashboard")
+                  ? "bg-blue-700 text-white"
+                  : "text-white hover:bg-blue-700"
+              }`}
             >
               Dashboard
             </Link>
             <Link
               to="/warehouses"
-              className="rounded-md px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                isActive("/warehouses")
+                  ? "bg-blue-700 text-white"
+                  : "text-white hover:bg-blue-700"
+              }`}
             >
               Warehouses
             </Link>
             <Link
               to="/inventory"
-              className="rounded-md px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                isActive("/inventory")
+                  ? "bg-blue-700 text-white"
+                  : "text-white hover:bg-blue-700"
+              }`}
             >
               Inventory
             </Link>
@@ -62,13 +78,21 @@ export const Navbar = () => {
               <>
                 <Link
                   to="/stock-transfer"
-                  className="rounded-md px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                  className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                    isActive("/stock-transfer")
+                      ? "bg-blue-700 text-white"
+                      : "text-white hover:bg-blue-700"
+                  }`}
                 >
                   Stock Transfer
                 </Link>
                 <Link
                   to="/bulk-transfer"
-                  className="rounded-md px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                  className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                    isActive("/bulk-transfer")
+                      ? "bg-blue-700 text-white"
+                      : "text-white hover:bg-blue-700"
+                  }`}
                 >
                   Bulk Transfer
                 </Link>
@@ -76,19 +100,31 @@ export const Navbar = () => {
             )}
             <Link
               to="/stock-activity"
-              className="rounded-md px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                isActive("/stock-activity")
+                  ? "bg-blue-700 text-white"
+                  : "text-white hover:bg-blue-700"
+              }`}
             >
               Activity
             </Link>
             <Link
               to="/reports"
-              className="rounded-md px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                isActive("/reports")
+                  ? "bg-blue-700 text-white"
+                  : "text-white hover:bg-blue-700"
+              }`}
             >
               Reports
             </Link>
             <Link
               to="/custom-reports"
-              className="rounded-md px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                isActive("/custom-reports")
+                  ? "bg-blue-700 text-white"
+                  : "text-white hover:bg-blue-700"
+              }`}
             >
               Custom Reports
             </Link>
@@ -106,7 +142,7 @@ export const Navbar = () => {
             </div>
             <button
               onClick={handleLogout}
-              className="rounded-md bg-blue-700 px-4 py-2 text-sm font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-600"
+              className="rounded-md bg-blue-700 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-600"
               aria-label="Logout from application"
             >
               Logout
@@ -117,7 +153,7 @@ export const Navbar = () => {
           <div className="flex md:hidden">
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="inline-flex items-center justify-center rounded-md p-2 text-white hover:bg-blue-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
+              className="inline-flex items-center justify-center rounded-md p-2 text-white transition-colors hover:bg-blue-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
               aria-expanded={isMobileMenuOpen}
               aria-label="Toggle navigation menu"
             >
@@ -165,12 +201,12 @@ export const Navbar = () => {
         <>
           {/* Backdrop overlay - closes menu when clicked */}
           <div
-            className="fixed inset-0 top-16 z-40 bg-black/30 md:hidden"
+            className="fixed inset-0 top-16 z-40 bg-black/30 transition-opacity duration-300 md:hidden"
             onClick={closeMobileMenu}
           />
 
           {/* Mobile menu content */}
-          <div className="relative z-50 md:hidden">
+          <div className="relative z-50 animate-slide-down md:hidden">
             <div className="space-y-1 px-2 pb-3 pt-2 sm:px-3">
               {/* User Info Mobile */}
               <div className="mb-4 border-b border-blue-500 pb-3">
@@ -185,21 +221,33 @@ export const Navbar = () => {
               {/* Navigation Links Mobile */}
               <Link
                 to="/dashboard"
-                className="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-700"
+                className={`block rounded-md px-3 py-2 text-base font-medium transition-colors ${
+                  isActive("/dashboard")
+                    ? "bg-blue-700 text-white"
+                    : "text-white hover:bg-blue-700"
+                }`}
                 onClick={closeMobileMenu}
               >
                 Dashboard
               </Link>
               <Link
                 to="/warehouses"
-                className="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-700"
+                className={`block rounded-md px-3 py-2 text-base font-medium transition-colors ${
+                  isActive("/warehouses")
+                    ? "bg-blue-700 text-white"
+                    : "text-white hover:bg-blue-700"
+                }`}
                 onClick={closeMobileMenu}
               >
                 Warehouses
               </Link>
               <Link
                 to="/inventory"
-                className="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-700"
+                className={`block rounded-md px-3 py-2 text-base font-medium transition-colors ${
+                  isActive("/inventory")
+                    ? "bg-blue-700 text-white"
+                    : "text-white hover:bg-blue-700"
+                }`}
                 onClick={closeMobileMenu}
               >
                 Inventory
@@ -208,14 +256,22 @@ export const Navbar = () => {
                 <>
                   <Link
                     to="/stock-transfer"
-                    className="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-700"
+                    className={`block rounded-md px-3 py-2 text-base font-medium transition-colors ${
+                      isActive("/stock-transfer")
+                        ? "bg-blue-700 text-white"
+                        : "text-white hover:bg-blue-700"
+                    }`}
                     onClick={closeMobileMenu}
                   >
                     Stock Transfer
                   </Link>
                   <Link
                     to="/bulk-transfer"
-                    className="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-700"
+                    className={`block rounded-md px-3 py-2 text-base font-medium transition-colors ${
+                      isActive("/bulk-transfer")
+                        ? "bg-blue-700 text-white"
+                        : "text-white hover:bg-blue-700"
+                    }`}
                     onClick={closeMobileMenu}
                   >
                     Bulk Transfer
@@ -224,21 +280,33 @@ export const Navbar = () => {
               )}
               <Link
                 to="/stock-activity"
-                className="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-700"
+                className={`block rounded-md px-3 py-2 text-base font-medium transition-colors ${
+                  isActive("/stock-activity")
+                    ? "bg-blue-700 text-white"
+                    : "text-white hover:bg-blue-700"
+                }`}
                 onClick={closeMobileMenu}
               >
                 Activity History
               </Link>
               <Link
                 to="/reports"
-                className="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-700"
+                className={`block rounded-md px-3 py-2 text-base font-medium transition-colors ${
+                  isActive("/reports")
+                    ? "bg-blue-700 text-white"
+                    : "text-white hover:bg-blue-700"
+                }`}
                 onClick={closeMobileMenu}
               >
                 Reports
               </Link>
               <Link
                 to="/custom-reports"
-                className="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-700"
+                className={`block rounded-md px-3 py-2 text-base font-medium transition-colors ${
+                  isActive("/custom-reports")
+                    ? "bg-blue-700 text-white"
+                    : "text-white hover:bg-blue-700"
+                }`}
                 onClick={closeMobileMenu}
               >
                 Custom Reports
@@ -247,7 +315,7 @@ export const Navbar = () => {
               {/* Logout Button Mobile */}
               <button
                 onClick={handleLogout}
-                className="mt-4 w-full rounded-md bg-blue-700 px-3 py-2 text-base font-medium text-white hover:bg-blue-800"
+                className="mt-4 w-full rounded-md bg-blue-700 px-3 py-2 text-base font-medium text-white transition-colors hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-600"
               >
                 Logout
               </button>
