@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import api from "../services/api";
-import { type WarehouseSummary as Warehouse } from "../types";
+import { type Warehouse } from "../types";
 
 type ReportType = "stock-activity" | "inventory-valuation";
 
