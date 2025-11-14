@@ -7,14 +7,15 @@ import java.time.LocalDateTime;
 
 /**
  * DTO for warehouse response data.
+ * Capacity values are in cubic feet.
  */
 public class WarehouseResponse {
 
     private Long id;
     private String name;
     private String location;
-    private Integer maxCapacity;
-    private Integer currentCapacity;
+    private BigDecimal maxCapacity; // Max capacity in cubic feet
+    private BigDecimal currentCapacity; // Current capacity in cubic feet
     private BigDecimal capacityAlertThreshold;
     private BigDecimal utilizationPercentage;
     private Boolean isAlertTriggered;
@@ -70,19 +71,19 @@ public class WarehouseResponse {
         this.location = location;
     }
 
-    public Integer getMaxCapacity() {
+    public BigDecimal getMaxCapacity() {
         return maxCapacity;
     }
 
-    public void setMaxCapacity(Integer maxCapacity) {
+    public void setMaxCapacity(BigDecimal maxCapacity) {
         this.maxCapacity = maxCapacity;
     }
 
-    public Integer getCurrentCapacity() {
+    public BigDecimal getCurrentCapacity() {
         return currentCapacity;
     }
 
-    public void setCurrentCapacity(Integer currentCapacity) {
+    public void setCurrentCapacity(BigDecimal currentCapacity) {
         this.currentCapacity = currentCapacity;
     }
 

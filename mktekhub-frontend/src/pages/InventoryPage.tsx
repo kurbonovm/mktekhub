@@ -48,6 +48,7 @@ export const InventoryPage = () => {
     quantity: 0,
     reorderLevel: 0,
     unitPrice: 0,
+    volumePerUnit: 1.0,
     warehouseId: 0,
     expirationDate: undefined,
     warrantyEndDate: undefined,
@@ -266,6 +267,7 @@ export const InventoryPage = () => {
       quantity: item.quantity,
       reorderLevel: item.reorderLevel,
       unitPrice: item.unitPrice,
+      volumePerUnit: item.volumePerUnit || 1.0,
       warehouseId: item.warehouseId,
       expirationDate: item.expirationDate,
       warrantyEndDate: item.warrantyEndDate,
@@ -463,6 +465,18 @@ export const InventoryPage = () => {
                   </span>
                 </div>
                 <div className="flex justify-between">
+                  <span className="text-gray-500">Volume per Unit:</span>
+                  <span className="font-medium">
+                    {(item.volumePerUnit || 0).toFixed(2)} ft³
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Total Volume:</span>
+                  <span className="font-medium">
+                    {(item.totalVolume || 0).toFixed(2)} ft³
+                  </span>
+                </div>
+                <div className="flex justify-between">
                   <span className="text-gray-500">Total Value:</span>
                   <span className="font-medium">
                     ${(item.quantity * (item.unitPrice || 0)).toFixed(2)}
@@ -535,6 +549,9 @@ export const InventoryPage = () => {
                 Price
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                Volume
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                 Total Value
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
@@ -551,7 +568,7 @@ export const InventoryPage = () => {
           <tbody className="divide-y divide-gray-200 bg-white">
             {filteredItems.length === 0 ? (
               <tr>
-                <td colSpan={10} className="px-6 py-12 text-center">
+                <td colSpan={11} className="px-6 py-12 text-center">
                   <div className="flex flex-col items-center justify-center">
                     <svg
                       className="h-12 w-12 text-gray-400"
@@ -621,6 +638,9 @@ export const InventoryPage = () => {
                   </td>
                   <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
                     ${item.unitPrice?.toFixed(2) || "0.00"}
+                  </td>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                    {item.totalVolume?.toFixed(2) || "0.00"} ft³
                   </td>
                   <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
                     ${item.totalValue?.toFixed(2) || "0.00"}
@@ -803,7 +823,7 @@ export const InventoryPage = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
                     Quantity
@@ -840,10 +860,12 @@ export const InventoryPage = () => {
                     }
                   />
                 </div>
+              </div>
 
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
-                    Unit Price
+                    Unit Price ($)
                   </label>
                   <input
                     type="number"
@@ -857,6 +879,26 @@ export const InventoryPage = () => {
                         unitPrice: parseFloat(e.target.value),
                       })
                     }
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Volume per Unit (ft³)
+                  </label>
+                  <input
+                    type="number"
+                    min="0.01"
+                    step="0.01"
+                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    value={formData.volumePerUnit || 1.0}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        volumePerUnit: parseFloat(e.target.value),
+                      })
+                    }
+                    placeholder="1.00"
                   />
                 </div>
               </div>

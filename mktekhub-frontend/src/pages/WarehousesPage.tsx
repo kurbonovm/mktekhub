@@ -161,7 +161,8 @@ export const WarehousesPage = () => {
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Capacity:</span>
                 <span className="font-medium text-gray-900">
-                  {warehouse.currentCapacity} / {warehouse.maxCapacity}
+                  {warehouse.currentCapacity.toFixed(2)} /{" "}
+                  {warehouse.maxCapacity.toFixed(2)} ft³
                 </span>
               </div>
               <div className="flex justify-between text-sm">
@@ -265,19 +266,20 @@ export const WarehousesPage = () => {
                   htmlFor="maxCapacity"
                   className="block text-sm font-medium text-gray-700"
                 >
-                  Max Capacity
+                  Max Capacity (cubic feet)
                 </label>
                 <input
                   type="number"
                   id="maxCapacity"
                   required
-                  min="1"
+                  min="0.01"
+                  step="0.01"
                   className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   value={formData.maxCapacity}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      maxCapacity: parseInt(e.target.value),
+                      maxCapacity: parseFloat(e.target.value),
                     })
                   }
                 />

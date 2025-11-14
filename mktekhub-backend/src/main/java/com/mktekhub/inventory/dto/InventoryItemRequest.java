@@ -37,6 +37,9 @@ public class InventoryItemRequest {
     @Min(value = 0, message = "Unit price must be at least 0")
     private BigDecimal unitPrice;
 
+    @Min(value = 0, message = "Volume per unit must be at least 0")
+    private BigDecimal volumePerUnit; // Volume in cubic feet per unit
+
     @Min(value = 0, message = "Reorder level must be at least 0")
     private Integer reorderLevel;
 
@@ -109,6 +112,14 @@ public class InventoryItemRequest {
 
     public void setUnitPrice(BigDecimal unitPrice) {
         this.unitPrice = unitPrice;
+    }
+
+    public BigDecimal getVolumePerUnit() {
+        return volumePerUnit;
+    }
+
+    public void setVolumePerUnit(BigDecimal volumePerUnit) {
+        this.volumePerUnit = volumePerUnit;
     }
 
     public Integer getReorderLevel() {

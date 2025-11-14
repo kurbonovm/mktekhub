@@ -13,6 +13,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -86,19 +87,29 @@ public class StockTransferService {
                 request.getQuantity());
         }
 
-        // Note: Warehouse capacity is not updated during transfers since items are just
-        // moving between locations. Capacity tracking is only relevant for add/remove operations.
+        // 7. Update warehouse capacities (volume-based)
+        // Calculate volume being transferred
+        BigDecimal volumePerUnit = sourceItem.getVolumePerUnit() != null ? sourceItem.getVolumePerUnit() : BigDecimal.ZERO;
+        BigDecimal volumeTransferred = volumePerUnit.multiply(BigDecimal.valueOf(request.getQuantity()));
 
-        // 7. Get current authenticated user
+        // Remove volume from source warehouse
+        sourceWarehouse.setCurrentCapacity(sourceWarehouse.getCurrentCapacity().subtract(volumeTransferred));
+        warehouseRepository.save(sourceWarehouse);
+
+        // Add volume to destination warehouse
+        destinationWarehouse.setCurrentCapacity(destinationWarehouse.getCurrentCapacity().add(volumeTransferred));
+        warehouseRepository.save(destinationWarehouse);
+
+        // 8. Get current authenticated user
         User currentUser = getCurrentUser();
 
-        // 8. Record previous quantities
+        // 9. Record previous quantities
         int previousSourceQuantity = sourceItem.getQuantity();
 
-        // 9. Update source item quantity
+        // 10. Update source item quantity
         sourceItem.setQuantity(sourceItem.getQuantity() - request.getQuantity());
 
-        // 10. Check if item already exists in destination warehouse
+        // 11. Check if item already exists in destination warehouse
         InventoryItem destinationItem = inventoryItemRepository
             .findBySkuAndWarehouseId(request.getItemSku(), request.getDestinationWarehouseId());
 
@@ -118,6 +129,7 @@ public class StockTransferService {
             destinationItem.setBrand(sourceItem.getBrand());
             destinationItem.setQuantity(request.getQuantity());
             destinationItem.setUnitPrice(sourceItem.getUnitPrice());
+            destinationItem.setVolumePerUnit(sourceItem.getVolumePerUnit());
             destinationItem.setReorderLevel(sourceItem.getReorderLevel());
             destinationItem.setWarrantyEndDate(sourceItem.getWarrantyEndDate());
             destinationItem.setExpirationDate(sourceItem.getExpirationDate());
@@ -125,11 +137,11 @@ public class StockTransferService {
             destinationItem.setWarehouse(destinationWarehouse);
         }
 
-        // 11. Save updated inventory items
+        // 12. Save updated inventory items
         inventoryItemRepository.save(sourceItem);
         inventoryItemRepository.save(destinationItem);
 
-        // 12. Create stock activity record for the transfer
+        // 13. Create stock activity record for the transfer
         StockActivity activity = new StockActivity();
         activity.setItem(destinationItem);
         activity.setItemSku(request.getItemSku());
@@ -149,7 +161,7 @@ public class StockTransferService {
 
         StockActivity savedActivity = stockActivityRepository.save(activity);
 
-        // 13. Return response
+        // 14. Return response
         return StockTransferResponse.fromEntity(savedActivity);
     }
 

@@ -19,6 +19,8 @@ public class InventoryItemResponse {
     private String brand;
     private Integer quantity;
     private BigDecimal unitPrice;
+    private BigDecimal volumePerUnit; // Volume in cubic feet per unit
+    private BigDecimal totalVolume; // Total volume in cubic feet
     private BigDecimal totalValue;
     private Integer reorderLevel;
     private Long warehouseId;
@@ -49,6 +51,8 @@ public class InventoryItemResponse {
         response.setBrand(item.getBrand());
         response.setQuantity(item.getQuantity());
         response.setUnitPrice(item.getUnitPrice());
+        response.setVolumePerUnit(item.getVolumePerUnit());
+        response.setTotalVolume(item.getTotalVolume());
         response.setTotalValue(item.getTotalValue());
         response.setReorderLevel(item.getReorderLevel());
         response.setWarehouseId(item.getWarehouse().getId());
@@ -127,6 +131,22 @@ public class InventoryItemResponse {
 
     public void setUnitPrice(BigDecimal unitPrice) {
         this.unitPrice = unitPrice;
+    }
+
+    public BigDecimal getVolumePerUnit() {
+        return volumePerUnit;
+    }
+
+    public void setVolumePerUnit(BigDecimal volumePerUnit) {
+        this.volumePerUnit = volumePerUnit;
+    }
+
+    public BigDecimal getTotalVolume() {
+        return totalVolume;
+    }
+
+    public void setTotalVolume(BigDecimal totalVolume) {
+        this.totalVolume = totalVolume;
     }
 
     public BigDecimal getTotalValue() {

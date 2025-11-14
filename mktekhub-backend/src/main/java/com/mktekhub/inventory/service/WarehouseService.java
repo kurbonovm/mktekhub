@@ -74,7 +74,7 @@ public class WarehouseService {
         warehouse.setName(request.getName());
         warehouse.setLocation(request.getLocation());
         warehouse.setMaxCapacity(request.getMaxCapacity());
-        warehouse.setCurrentCapacity(0);
+        warehouse.setCurrentCapacity(BigDecimal.ZERO);
         warehouse.setIsActive(true);
 
         // Set threshold or use default
@@ -123,7 +123,7 @@ public class WarehouseService {
                 .orElseThrow(() -> new ResourceNotFoundException("Warehouse", "id", id));
 
         // Check if warehouse has inventory items
-        if (warehouse.getCurrentCapacity() > 0) {
+        if (warehouse.getCurrentCapacity().compareTo(BigDecimal.ZERO) > 0) {
             throw new InvalidOperationException("Cannot delete warehouse with existing inventory. " +
                     "Please move or remove all items first.");
         }
@@ -141,7 +141,7 @@ public class WarehouseService {
         Warehouse warehouse = warehouseRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Warehouse", "id", id));
 
-        if (warehouse.getCurrentCapacity() > 0) {
+        if (warehouse.getCurrentCapacity().compareTo(BigDecimal.ZERO) > 0) {
             throw new InvalidOperationException("Cannot delete warehouse with existing inventory.");
         }
 

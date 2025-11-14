@@ -2,14 +2,15 @@ package com.mktekhub.inventory.dto;
 
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
 
 /**
  * DTO for creating or updating a warehouse.
+ * Max capacity is measured in cubic feet.
  */
 public class WarehouseRequest {
 
@@ -21,8 +22,9 @@ public class WarehouseRequest {
     @Size(max = 255, message = "Location must not exceed 255 characters")
     private String location;
 
-    @Min(value = 1, message = "Max capacity must be at least 1")
-    private Integer maxCapacity;
+    @NotNull(message = "Max capacity is required")
+    @DecimalMin(value = "0.01", message = "Max capacity must be at least 0.01 cubic feet")
+    private BigDecimal maxCapacity; // Max capacity in cubic feet
 
     @DecimalMin(value = "0.0", message = "Capacity alert threshold must be at least 0")
     @DecimalMax(value = "100.0", message = "Capacity alert threshold must not exceed 100")
@@ -32,7 +34,7 @@ public class WarehouseRequest {
     public WarehouseRequest() {
     }
 
-    public WarehouseRequest(String name, String location, Integer maxCapacity, BigDecimal capacityAlertThreshold) {
+    public WarehouseRequest(String name, String location, BigDecimal maxCapacity, BigDecimal capacityAlertThreshold) {
         this.name = name;
         this.location = location;
         this.maxCapacity = maxCapacity;
@@ -56,11 +58,11 @@ public class WarehouseRequest {
         this.location = location;
     }
 
-    public Integer getMaxCapacity() {
+    public BigDecimal getMaxCapacity() {
         return maxCapacity;
     }
 
-    public void setMaxCapacity(Integer maxCapacity) {
+    public void setMaxCapacity(BigDecimal maxCapacity) {
         this.maxCapacity = maxCapacity;
     }
 
