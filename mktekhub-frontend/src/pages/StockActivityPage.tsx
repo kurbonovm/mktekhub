@@ -26,6 +26,8 @@ export const StockActivityPage = () => {
         return "bg-purple-100 text-purple-800";
       case "ADJUSTMENT":
         return "bg-yellow-100 text-yellow-800";
+      case "UPDATE":
+        return "bg-indigo-100 text-indigo-800";
       case "DELETE":
         return "bg-red-100 text-red-800";
       default:
@@ -37,15 +39,20 @@ export const StockActivityPage = () => {
     return new Date(dateString).toLocaleString();
   };
 
-  const filteredActivities = activities?.filter((activity) => {
-    const matchesType =
-      filterType === "all" || activity.activityType === filterType;
-    const matchesSku =
-      searchSku === "" ||
-      activity.itemSku.toLowerCase().includes(searchSku.toLowerCase()) ||
-      activity.itemName.toLowerCase().includes(searchSku.toLowerCase());
-    return matchesType && matchesSku;
-  });
+  const filteredActivities = activities
+    ?.filter((activity) => {
+      const matchesType =
+        filterType === "all" || activity.activityType === filterType;
+      const matchesSku =
+        searchSku === "" ||
+        activity.itemSku.toLowerCase().includes(searchSku.toLowerCase()) ||
+        activity.itemName.toLowerCase().includes(searchSku.toLowerCase());
+      return matchesType && matchesSku;
+    })
+    .sort((a, b) => {
+      // Sort by timestamp descending (newest first)
+      return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+    });
 
   if (isLoading) {
     return (
@@ -98,6 +105,7 @@ export const StockActivityPage = () => {
             <option value="TRANSFER">Transfer</option>
             <option value="SALE">Sale</option>
             <option value="ADJUSTMENT">Adjustment</option>
+            <option value="UPDATE">Update</option>
             <option value="DELETE">Delete</option>
           </select>
         </div>

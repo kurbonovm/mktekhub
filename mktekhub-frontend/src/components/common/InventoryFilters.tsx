@@ -61,9 +61,21 @@ export const InventoryFilters: React.FC<InventoryFiltersProps> = ({
 
   const activeFiltersCount = Object.entries(filters).filter(([key, value]) => {
     if (key === "warehouseId") return value !== 0;
+    if (key === "stockStatus" || key === "expirationStatus")
+      return value !== "all";
     if (typeof value === "string") return value !== "";
-    return value !== "all";
+    return false;
   }).length;
+
+  // Helper to check if a specific filter is active
+  const isFilterActive = (key: keyof InventoryFilterOptions): boolean => {
+    const value = filters[key];
+    if (key === "warehouseId") return (value as number) !== 0;
+    if (key === "stockStatus" || key === "expirationStatus")
+      return value !== "all";
+    if (typeof value === "string") return value !== "";
+    return false;
+  };
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
@@ -131,9 +143,16 @@ export const InventoryFilters: React.FC<InventoryFiltersProps> = ({
             <div>
               <label className="block text-sm font-medium text-gray-700">
                 Warehouse
+                {isFilterActive("warehouseId") && (
+                  <span className="ml-1 text-blue-600">●</span>
+                )}
               </label>
               <select
-                className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-3 text-base focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm"
+                className={`mt-1 block w-full rounded-md border px-3 py-3 text-base focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm ${
+                  isFilterActive("warehouseId")
+                    ? "border-blue-500 bg-blue-50"
+                    : "border-gray-300 bg-white"
+                }`}
                 value={filters.warehouseId}
                 onChange={(e) =>
                   handleChange("warehouseId", parseInt(e.target.value))
@@ -152,9 +171,16 @@ export const InventoryFilters: React.FC<InventoryFiltersProps> = ({
             <div>
               <label className="block text-sm font-medium text-gray-700">
                 Category
+                {isFilterActive("category") && (
+                  <span className="ml-1 text-blue-600">●</span>
+                )}
               </label>
               <select
-                className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-3 text-base focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm"
+                className={`mt-1 block w-full rounded-md border px-3 py-3 text-base focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm ${
+                  isFilterActive("category")
+                    ? "border-blue-500 bg-blue-50"
+                    : "border-gray-300 bg-white"
+                }`}
                 value={filters.category}
                 onChange={(e) => handleChange("category", e.target.value)}
               >
@@ -171,9 +197,16 @@ export const InventoryFilters: React.FC<InventoryFiltersProps> = ({
             <div>
               <label className="block text-sm font-medium text-gray-700">
                 Brand
+                {isFilterActive("brand") && (
+                  <span className="ml-1 text-blue-600">●</span>
+                )}
               </label>
               <select
-                className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-3 text-base focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm"
+                className={`mt-1 block w-full rounded-md border px-3 py-3 text-base focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm ${
+                  isFilterActive("brand")
+                    ? "border-blue-500 bg-blue-50"
+                    : "border-gray-300 bg-white"
+                }`}
                 value={filters.brand}
                 onChange={(e) => handleChange("brand", e.target.value)}
               >
@@ -190,9 +223,16 @@ export const InventoryFilters: React.FC<InventoryFiltersProps> = ({
             <div>
               <label className="block text-sm font-medium text-gray-700">
                 Stock Status
+                {isFilterActive("stockStatus") && (
+                  <span className="ml-1 text-blue-600">●</span>
+                )}
               </label>
               <select
-                className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-3 text-base focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm"
+                className={`mt-1 block w-full rounded-md border px-3 py-3 text-base focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm ${
+                  isFilterActive("stockStatus")
+                    ? "border-blue-500 bg-blue-50"
+                    : "border-gray-300 bg-white"
+                }`}
                 value={filters.stockStatus}
                 onChange={(e) =>
                   handleChange(
@@ -215,11 +255,18 @@ export const InventoryFilters: React.FC<InventoryFiltersProps> = ({
             <div>
               <label className="block text-sm font-medium text-gray-700">
                 Min Quantity
+                {isFilterActive("minQuantity") && (
+                  <span className="ml-1 text-blue-600">●</span>
+                )}
               </label>
               <input
                 type="number"
                 min="0"
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-3 text-base focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm"
+                className={`mt-1 block w-full rounded-md border px-3 py-3 text-base focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm ${
+                  isFilterActive("minQuantity")
+                    ? "border-blue-500 bg-blue-50"
+                    : "border-gray-300 bg-white"
+                }`}
                 placeholder="Min"
                 value={filters.minQuantity}
                 onChange={(e) => handleChange("minQuantity", e.target.value)}
@@ -229,11 +276,18 @@ export const InventoryFilters: React.FC<InventoryFiltersProps> = ({
             <div>
               <label className="block text-sm font-medium text-gray-700">
                 Max Quantity
+                {isFilterActive("maxQuantity") && (
+                  <span className="ml-1 text-blue-600">●</span>
+                )}
               </label>
               <input
                 type="number"
                 min="0"
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-3 text-base focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm"
+                className={`mt-1 block w-full rounded-md border px-3 py-3 text-base focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm ${
+                  isFilterActive("maxQuantity")
+                    ? "border-blue-500 bg-blue-50"
+                    : "border-gray-300 bg-white"
+                }`}
                 placeholder="Max"
                 value={filters.maxQuantity}
                 onChange={(e) => handleChange("maxQuantity", e.target.value)}
@@ -244,12 +298,19 @@ export const InventoryFilters: React.FC<InventoryFiltersProps> = ({
             <div>
               <label className="block text-sm font-medium text-gray-700">
                 Min Price ($)
+                {isFilterActive("minPrice") && (
+                  <span className="ml-1 text-blue-600">●</span>
+                )}
               </label>
               <input
                 type="number"
                 min="0"
                 step="0.01"
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-3 text-base focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm"
+                className={`mt-1 block w-full rounded-md border px-3 py-3 text-base focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm ${
+                  isFilterActive("minPrice")
+                    ? "border-blue-500 bg-blue-50"
+                    : "border-gray-300 bg-white"
+                }`}
                 placeholder="Min"
                 value={filters.minPrice}
                 onChange={(e) => handleChange("minPrice", e.target.value)}
@@ -259,12 +320,19 @@ export const InventoryFilters: React.FC<InventoryFiltersProps> = ({
             <div>
               <label className="block text-sm font-medium text-gray-700">
                 Max Price ($)
+                {isFilterActive("maxPrice") && (
+                  <span className="ml-1 text-blue-600">●</span>
+                )}
               </label>
               <input
                 type="number"
                 min="0"
                 step="0.01"
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-3 text-base focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm"
+                className={`mt-1 block w-full rounded-md border px-3 py-3 text-base focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm ${
+                  isFilterActive("maxPrice")
+                    ? "border-blue-500 bg-blue-50"
+                    : "border-gray-300 bg-white"
+                }`}
                 placeholder="Max"
                 value={filters.maxPrice}
                 onChange={(e) => handleChange("maxPrice", e.target.value)}
@@ -276,9 +344,16 @@ export const InventoryFilters: React.FC<InventoryFiltersProps> = ({
           <div className="mt-4">
             <label className="block text-sm font-medium text-gray-700">
               Expiration Status
+              {isFilterActive("expirationStatus") && (
+                <span className="ml-1 text-blue-600">●</span>
+              )}
             </label>
             <select
-              className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-3 text-base focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm md:w-1/2 lg:w-1/4"
+              className={`mt-1 block w-full rounded-md border px-3 py-3 text-base focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm md:w-1/2 lg:w-1/4 ${
+                isFilterActive("expirationStatus")
+                  ? "border-blue-500 bg-blue-50"
+                  : "border-gray-300 bg-white"
+              }`}
               value={filters.expirationStatus}
               onChange={(e) =>
                 handleChange(

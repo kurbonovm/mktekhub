@@ -140,6 +140,7 @@ export type ActivityType =
   | "TRANSFER"
   | "SALE"
   | "ADJUSTMENT"
+  | "UPDATE"
   | "DELETE";
 
 export interface StockActivity {

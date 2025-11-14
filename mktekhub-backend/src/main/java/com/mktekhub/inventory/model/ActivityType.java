@@ -25,6 +25,11 @@ public enum ActivityType {
     ADJUSTMENT,
 
     /**
+     * Item details updated (non-quantity changes)
+     */
+    UPDATE,
+
+    /**
      * Item marked for deletion or removed
      */
     DELETE

@@ -12,6 +12,10 @@ export const WarehousesPage = () => {
   const [editingWarehouse, setEditingWarehouse] = useState<Warehouse | null>(
     null,
   );
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [warehouseToDelete, setWarehouseToDelete] = useState<Warehouse | null>(
+    null,
+  );
   const [formData, setFormData] = useState<WarehouseRequest>({
     name: "",
     location: "",
@@ -94,10 +98,22 @@ export const WarehousesPage = () => {
     }
   };
 
-  const handleDelete = (id: number) => {
-    if (window.confirm("Are you sure you want to delete this warehouse?")) {
-      deleteMutation.mutate(id);
+  const handleDeleteClick = (warehouse: Warehouse) => {
+    setWarehouseToDelete(warehouse);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (warehouseToDelete) {
+      deleteMutation.mutate(warehouseToDelete.id);
+      setDeleteConfirmOpen(false);
+      setWarehouseToDelete(null);
     }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteConfirmOpen(false);
+    setWarehouseToDelete(null);
   };
 
   if (isLoading) {
@@ -204,7 +220,7 @@ export const WarehousesPage = () => {
                   Edit
                 </button>
                 <button
-                  onClick={() => handleDelete(warehouse.id)}
+                  onClick={() => handleDeleteClick(warehouse)}
                   className="flex-1 rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700"
                 >
                   Delete
@@ -215,7 +231,7 @@ export const WarehousesPage = () => {
         ))}
       </div>
 
-      {/* Modal */}
+      {/* Create/Edit Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
@@ -332,6 +348,56 @@ export const WarehousesPage = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      {deleteConfirmOpen && warehouseToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+            <div className="mb-4">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
+                <svg
+                  className="h-6 w-6 text-red-600"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth="1.5"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
+                  />
+                </svg>
+              </div>
+              <h3 className="mt-4 text-center text-lg font-semibold text-gray-900">
+                Delete Warehouse
+              </h3>
+              <p className="mt-2 text-center text-sm text-gray-600">
+                Are you sure you want to delete{" "}
+                <span className="font-semibold">{warehouseToDelete.name}</span>?
+                This action cannot be undone.
+              </p>
+            </div>
+            <div className="flex space-x-3">
+              <button
+                type="button"
+                onClick={handleDeleteCancel}
+                className="flex-1 rounded-md bg-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteConfirm}
+                disabled={deleteMutation.isPending}
+                className="flex-1 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:bg-gray-400"
+              >
+                {deleteMutation.isPending ? "Deleting..." : "Delete"}
+              </button>
+            </div>
           </div>
         </div>
       )}
