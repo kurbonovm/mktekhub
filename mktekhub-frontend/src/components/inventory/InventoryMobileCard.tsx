@@ -47,6 +47,14 @@ export const InventoryMobileCard = ({
               ? "Try adjusting your search or filters"
               : "Get started by adding a new inventory item"}
           </p>
+          {hasActiveFilters && (
+            <button
+              onClick={onResetFilters}
+              className="mt-4 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            >
+              Clear filters
+            </button>
+          )}
         </div>
       ) : (
         items.map((item) => (
