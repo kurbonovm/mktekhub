@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "../contexts/ToastContext";
 import { inventoryService } from "../services/inventoryService";
@@ -186,6 +186,18 @@ export const BulkTransferPage = () => {
     if (!inventoryItems || warehouseId === 0) return [];
     return inventoryItems.filter((item) => item.warehouseId === warehouseId);
   };
+
+  // Keyboard navigation - close confirmation dialog with Escape key
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && showConfirmation) {
+        setShowConfirmation(false);
+      }
+    };
+
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [showConfirmation]);
 
   return (
     <div className="p-8">
@@ -384,9 +396,17 @@ export const BulkTransferPage = () => {
 
       {/* Confirmation Dialog */}
       {showConfirmation && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/25">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/25"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="confirmation-title"
+        >
           <div className="relative max-h-[80vh] w-full max-w-3xl overflow-y-auto rounded-lg bg-white p-6 shadow-2xl border border-gray-200">
-            <h2 className="mb-4 text-2xl font-bold text-gray-900">
+            <h2
+              id="confirmation-title"
+              className="mb-4 text-2xl font-bold text-gray-900"
+            >
               Confirm Bulk Transfer
             </h2>
             <p className="mb-4 text-sm text-gray-600">
