@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
+import mkth from "./mkth.png";
 
 export const Navbar = () => {
   const { user, logout, hasRole } = useAuth();
@@ -30,7 +31,7 @@ export const Navbar = () => {
               className="text-lg font-bold text-white hover:text-blue-100 sm:text-xl"
               onClick={closeMobileMenu}
             >
-              MKTekHub Inventory
+              <img src={mkth} alt="" width={"50px"} />
             </Link>
           </div>
 
@@ -67,6 +68,18 @@ export const Navbar = () => {
               className="rounded-md px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
             >
               Activity
+            </Link>
+            <Link
+              to="/reports"
+              className="rounded-md px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            >
+              Reports
+            </Link>
+            <Link
+              to="/custom-reports"
+              className="rounded-md px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            >
+              Custom Reports
             </Link>
           </div>
 
@@ -191,6 +204,20 @@ export const Navbar = () => {
                 onClick={closeMobileMenu}
               >
                 Activity History
+              </Link>
+              <Link
+                to="/reports"
+                className="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-700"
+                onClick={closeMobileMenu}
+              >
+                Reports
+              </Link>
+              <Link
+                to="/custom-reports"
+                className="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-700"
+                onClick={closeMobileMenu}
+              >
+                Custom Reports
               </Link>
 
               {/* Logout Button Mobile */}

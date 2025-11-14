@@ -47,6 +47,9 @@ public class InventoryItem {
     @Column(name = "unit_price", precision = 10, scale = 2)
     private BigDecimal unitPrice;
 
+    @Column(name = "volume_per_unit", precision = 10, scale = 2)
+    private BigDecimal volumePerUnit; // Volume in cubic feet per unit
+
     @Column(name = "reorder_level")
     private Integer reorderLevel;
 
@@ -148,6 +151,14 @@ public class InventoryItem {
 
     public void setUnitPrice(BigDecimal unitPrice) {
         this.unitPrice = unitPrice;
+    }
+
+    public BigDecimal getVolumePerUnit() {
+        return volumePerUnit;
+    }
+
+    public void setVolumePerUnit(BigDecimal volumePerUnit) {
+        this.volumePerUnit = volumePerUnit;
     }
 
     public Integer getReorderLevel() {
@@ -254,6 +265,17 @@ public class InventoryItem {
             return BigDecimal.ZERO;
         }
         return unitPrice.multiply(BigDecimal.valueOf(quantity));
+    }
+
+    /**
+     * Calculates the total volume occupied by this inventory item.
+     * @return Total volume in cubic feet (quantity * volumePerUnit)
+     */
+    public BigDecimal getTotalVolume() {
+        if (volumePerUnit == null) {
+            return BigDecimal.ZERO;
+        }
+        return volumePerUnit.multiply(BigDecimal.valueOf(quantity));
     }
 
     /**

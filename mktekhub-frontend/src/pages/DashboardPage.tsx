@@ -40,7 +40,7 @@ export const DashboardPage = () => {
         <h2 className="mb-4 text-2xl font-semibold text-gray-800">
           Warehouse Summary
         </h2>
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
           <div className="rounded-lg bg-white p-6 shadow">
             <p className="text-sm text-gray-600">Total Warehouses</p>
             <p className="text-3xl font-bold text-blue-600">
@@ -51,6 +51,18 @@ export const DashboardPage = () => {
             <p className="text-sm text-gray-600">Active Warehouses</p>
             <p className="text-3xl font-bold text-green-600">
               {summary?.warehouseSummary.activeWarehouses}
+            </p>
+          </div>
+          <div className="rounded-lg bg-white p-6 shadow">
+            <p className="text-sm text-gray-600">Total Capacity</p>
+            <p className="text-2xl font-bold text-indigo-600">
+              {summary?.warehouseSummary.totalCapacity?.toFixed(0)} ft³
+            </p>
+          </div>
+          <div className="rounded-lg bg-white p-6 shadow">
+            <p className="text-sm text-gray-600">Used Capacity</p>
+            <p className="text-2xl font-bold text-orange-600">
+              {summary?.warehouseSummary.usedCapacity?.toFixed(0)} ft³
             </p>
           </div>
           <div className="rounded-lg bg-white p-6 shadow">

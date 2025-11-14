@@ -52,16 +52,16 @@ public class DashboardSummary {
     public static class WarehouseSummary {
         private int totalWarehouses;
         private int activeWarehouses;
-        private int totalCapacity;
-        private int usedCapacity;
+        private BigDecimal totalCapacity; // Volume in cubic feet
+        private BigDecimal usedCapacity; // Volume in cubic feet
         private BigDecimal averageUtilization;
         private int warehousesWithAlerts;
 
         public WarehouseSummary() {
         }
 
-        public WarehouseSummary(int totalWarehouses, int activeWarehouses, int totalCapacity,
-                                int usedCapacity, BigDecimal averageUtilization, int warehousesWithAlerts) {
+        public WarehouseSummary(int totalWarehouses, int activeWarehouses, BigDecimal totalCapacity,
+                                BigDecimal usedCapacity, BigDecimal averageUtilization, int warehousesWithAlerts) {
             this.totalWarehouses = totalWarehouses;
             this.activeWarehouses = activeWarehouses;
             this.totalCapacity = totalCapacity;
@@ -86,19 +86,19 @@ public class DashboardSummary {
             this.activeWarehouses = activeWarehouses;
         }
 
-        public int getTotalCapacity() {
+        public BigDecimal getTotalCapacity() {
             return totalCapacity;
         }
 
-        public void setTotalCapacity(int totalCapacity) {
+        public void setTotalCapacity(BigDecimal totalCapacity) {
             this.totalCapacity = totalCapacity;
         }
 
-        public int getUsedCapacity() {
+        public BigDecimal getUsedCapacity() {
             return usedCapacity;
         }
 
-        public void setUsedCapacity(int usedCapacity) {
+        public void setUsedCapacity(BigDecimal usedCapacity) {
             this.usedCapacity = usedCapacity;
         }
 

@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -118,12 +119,16 @@ public class InventoryItemService {
         Warehouse warehouse = warehouseRepository.findById(request.getWarehouseId())
                 .orElseThrow(() -> new ResourceNotFoundException("Warehouse", "id", request.getWarehouseId()));
 
+        // Calculate total volume for this item
+        BigDecimal volumePerUnit = request.getVolumePerUnit() != null ? request.getVolumePerUnit() : BigDecimal.ZERO;
+        BigDecimal totalVolume = volumePerUnit.multiply(BigDecimal.valueOf(request.getQuantity()));
+
         // Check warehouse capacity
-        if (warehouse.wouldExceedCapacity(request.getQuantity())) {
+        if (warehouse.wouldExceedCapacity(totalVolume)) {
             throw new WarehouseCapacityExceededException(
                     warehouse.getName(),
                     warehouse.getAvailableCapacity(),
-                    request.getQuantity());
+                    totalVolume);
         }
 
         // Create inventory item
@@ -135,6 +140,7 @@ public class InventoryItemService {
         item.setBrand(request.getBrand());
         item.setQuantity(request.getQuantity());
         item.setUnitPrice(request.getUnitPrice());
+        item.setVolumePerUnit(volumePerUnit);
         item.setReorderLevel(request.getReorderLevel());
         item.setWarehouse(warehouse);
         item.setWarrantyEndDate(request.getWarrantyEndDate());
@@ -142,6 +148,11 @@ public class InventoryItemService {
         item.setBarcode(request.getBarcode());
 
         InventoryItem saved = inventoryItemRepository.save(item);
+
+        // Update warehouse current capacity (volume-based)
+        warehouse.setCurrentCapacity(warehouse.getCurrentCapacity().add(totalVolume));
+        warehouseRepository.save(warehouse);
+
         return InventoryItemResponse.fromEntity(saved);
     }
 
@@ -158,19 +169,48 @@ public class InventoryItemService {
             throw new DuplicateResourceException("InventoryItem", "sku", request.getSku());
         }
 
+        // Store old values for capacity adjustment
+        Warehouse oldWarehouse = item.getWarehouse();
+        BigDecimal oldVolume = item.getTotalVolume();
+
+        // Calculate new volume
+        BigDecimal newVolumePerUnit = request.getVolumePerUnit() != null ? request.getVolumePerUnit() : BigDecimal.ZERO;
+        BigDecimal newTotalVolume = newVolumePerUnit.multiply(BigDecimal.valueOf(request.getQuantity()));
+
         // If warehouse is changing, validate new warehouse and capacity
         if (!item.getWarehouse().getId().equals(request.getWarehouseId())) {
             Warehouse newWarehouse = warehouseRepository.findById(request.getWarehouseId())
                     .orElseThrow(() -> new ResourceNotFoundException("Warehouse", "id", request.getWarehouseId()));
 
-            if (newWarehouse.wouldExceedCapacity(request.getQuantity())) {
+            if (newWarehouse.wouldExceedCapacity(newTotalVolume)) {
                 throw new WarehouseCapacityExceededException(
                         newWarehouse.getName(),
                         newWarehouse.getAvailableCapacity(),
-                        request.getQuantity());
+                        newTotalVolume);
             }
 
+            // Update warehouse capacities: remove from old, add to new
+            oldWarehouse.setCurrentCapacity(oldWarehouse.getCurrentCapacity().subtract(oldVolume));
+            warehouseRepository.save(oldWarehouse);
+
+            newWarehouse.setCurrentCapacity(newWarehouse.getCurrentCapacity().add(newTotalVolume));
+            warehouseRepository.save(newWarehouse);
+
             item.setWarehouse(newWarehouse);
+        } else if (oldVolume.compareTo(newTotalVolume) != 0) {
+            // Same warehouse but volume changed (due to quantity or volumePerUnit change)
+            BigDecimal volumeDifference = newTotalVolume.subtract(oldVolume);
+
+            // Validate capacity if increasing volume
+            if (volumeDifference.compareTo(BigDecimal.ZERO) > 0 && oldWarehouse.wouldExceedCapacity(volumeDifference)) {
+                throw new WarehouseCapacityExceededException(
+                        oldWarehouse.getName(),
+                        oldWarehouse.getAvailableCapacity(),
+                        volumeDifference);
+            }
+
+            oldWarehouse.setCurrentCapacity(oldWarehouse.getCurrentCapacity().add(volumeDifference));
+            warehouseRepository.save(oldWarehouse);
         }
 
         // Update item fields
@@ -181,6 +221,7 @@ public class InventoryItemService {
         item.setBrand(request.getBrand());
         item.setQuantity(request.getQuantity());
         item.setUnitPrice(request.getUnitPrice());
+        item.setVolumePerUnit(newVolumePerUnit);
         item.setReorderLevel(request.getReorderLevel());
         item.setWarrantyEndDate(request.getWarrantyEndDate());
         item.setExpirationDate(request.getExpirationDate());
@@ -197,6 +238,11 @@ public class InventoryItemService {
     public void deleteItem(Long id) {
         InventoryItem item = inventoryItemRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("InventoryItem", "id", id));
+
+        // Update warehouse current capacity (volume-based)
+        Warehouse warehouse = item.getWarehouse();
+        warehouse.setCurrentCapacity(warehouse.getCurrentCapacity().subtract(item.getTotalVolume()));
+        warehouseRepository.save(warehouse);
 
         inventoryItemRepository.delete(item);
     }
@@ -215,16 +261,26 @@ public class InventoryItemService {
             throw new InvalidOperationException("Quantity adjustment would result in negative quantity");
         }
 
-        // Check warehouse capacity if increasing quantity
-        if (quantityChange > 0 && item.getWarehouse().wouldExceedCapacity(quantityChange)) {
+        // Calculate volume change
+        BigDecimal volumePerUnit = item.getVolumePerUnit() != null ? item.getVolumePerUnit() : BigDecimal.ZERO;
+        BigDecimal volumeChange = volumePerUnit.multiply(BigDecimal.valueOf(quantityChange));
+
+        // Check warehouse capacity if increasing volume
+        if (volumeChange.compareTo(BigDecimal.ZERO) > 0 && item.getWarehouse().wouldExceedCapacity(volumeChange)) {
             throw new WarehouseCapacityExceededException(
                     item.getWarehouse().getName(),
                     item.getWarehouse().getAvailableCapacity(),
-                    quantityChange);
+                    volumeChange);
         }
 
         item.setQuantity(newQuantity);
         InventoryItem updated = inventoryItemRepository.save(item);
+
+        // Update warehouse current capacity (volume-based)
+        Warehouse warehouse = item.getWarehouse();
+        warehouse.setCurrentCapacity(warehouse.getCurrentCapacity().add(volumeChange));
+        warehouseRepository.save(warehouse);
+
         return InventoryItemResponse.fromEntity(updated);
     }
 }

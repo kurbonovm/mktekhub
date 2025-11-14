@@ -44,13 +44,13 @@ public class DashboardService {
         List<Warehouse> activeWarehouses = warehouseRepository.findByIsActiveTrue();
         List<Warehouse> warehousesWithAlerts = warehouseRepository.findWarehousesWithCapacityAlert();
 
-        int totalCapacity = allWarehouses.stream()
-            .mapToInt(Warehouse::getMaxCapacity)
-            .sum();
+        BigDecimal totalCapacity = allWarehouses.stream()
+            .map(Warehouse::getMaxCapacity)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        int usedCapacity = allWarehouses.stream()
-            .mapToInt(Warehouse::getCurrentCapacity)
-            .sum();
+        BigDecimal usedCapacity = allWarehouses.stream()
+            .map(Warehouse::getCurrentCapacity)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal averageUtilization = BigDecimal.ZERO;
         if (!allWarehouses.isEmpty()) {

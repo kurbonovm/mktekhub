@@ -1,6 +1,6 @@
 -- MKTekHub Inventory Management System
 -- PostgreSQL Database Schema
--- Version: 2.0 (Updated)
+-- Version: 3.0 (Volume-Based Capacity)
 
 -- ============================================
 -- Drop existing tables (for clean install)
@@ -77,13 +77,16 @@ CREATE TABLE warehouse (
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     location VARCHAR(255) NOT NULL,
-    max_capacity INTEGER NOT NULL CHECK (max_capacity > 0),
-    current_capacity INTEGER DEFAULT 0 CHECK (current_capacity >= 0),
+    max_capacity NUMERIC(12,2) NOT NULL CHECK (max_capacity > 0),
+    current_capacity NUMERIC(12,2) DEFAULT 0 CHECK (current_capacity >= 0),
     capacity_alert_threshold DECIMAL(5,2) DEFAULT 80.00 CHECK (capacity_alert_threshold BETWEEN 0 AND 100),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     is_active BOOLEAN DEFAULT TRUE
 );
+
+COMMENT ON COLUMN warehouse.max_capacity IS 'Maximum capacity in cubic feet';
+COMMENT ON COLUMN warehouse.current_capacity IS 'Current used capacity in cubic feet';
 
 -- Indexes for warehouse table
 CREATE INDEX idx_warehouse_name ON warehouse(name);
@@ -105,6 +108,7 @@ CREATE TABLE inventory_item (
     brand VARCHAR(100),
     quantity INTEGER DEFAULT 0 CHECK (quantity >= 0),
     unit_price DECIMAL(10,2) CHECK (unit_price >= 0),
+    volume_per_unit NUMERIC(10,2) DEFAULT 1.00 CHECK (volume_per_unit >= 0),
     reorder_level INTEGER CHECK (reorder_level >= 0),
     warehouse_id BIGINT NOT NULL,
     warranty_end_date DATE,
@@ -114,6 +118,8 @@ CREATE TABLE inventory_item (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (warehouse_id) REFERENCES warehouse(id) ON DELETE RESTRICT
 );
+
+COMMENT ON COLUMN inventory_item.volume_per_unit IS 'Volume per unit in cubic feet';
 
 -- Indexes for inventory_item table
 CREATE INDEX idx_inventory_item_sku ON inventory_item(sku);
@@ -216,7 +222,7 @@ CREATE TRIGGER trigger_inventory_item_updated_at
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
--- Function: Update warehouse current_capacity
+-- Function: Update warehouse current_capacity (volume-based)
 CREATE OR REPLACE FUNCTION update_warehouse_capacity()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -224,7 +230,7 @@ BEGIN
     IF TG_OP = 'UPDATE' AND OLD.warehouse_id != NEW.warehouse_id THEN
         UPDATE warehouse
         SET current_capacity = (
-            SELECT COALESCE(SUM(quantity), 0)
+            SELECT COALESCE(SUM(quantity * COALESCE(volume_per_unit, 1.00)), 0)
             FROM inventory_item
             WHERE warehouse_id = OLD.warehouse_id
         )
@@ -234,7 +240,7 @@ BEGIN
     IF TG_OP = 'DELETE' THEN
         UPDATE warehouse
         SET current_capacity = (
-            SELECT COALESCE(SUM(quantity), 0)
+            SELECT COALESCE(SUM(quantity * COALESCE(volume_per_unit, 1.00)), 0)
             FROM inventory_item
             WHERE warehouse_id = OLD.warehouse_id
         )
@@ -242,10 +248,10 @@ BEGIN
         RETURN OLD;
     END IF;
 
-    -- Update capacity for new/current warehouse
+    -- Update capacity for new/current warehouse (volume = quantity * volumePerUnit)
     UPDATE warehouse
     SET current_capacity = (
-        SELECT COALESCE(SUM(quantity), 0)
+        SELECT COALESCE(SUM(quantity * COALESCE(volume_per_unit, 1.00)), 0)
         FROM inventory_item
         WHERE warehouse_id = NEW.warehouse_id
     )
@@ -254,6 +260,8 @@ BEGIN
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
+COMMENT ON FUNCTION update_warehouse_capacity() IS 'Updates warehouse current_capacity based on volume (quantity × volume_per_unit) of all items';
 
 -- Trigger: Update warehouse capacity on inventory changes
 CREATE TRIGGER trigger_update_warehouse_capacity
@@ -317,41 +325,60 @@ INSERT INTO "user" (username, password, email, is_active) VALUES
 INSERT INTO user_role (user_id, role_id) VALUES
     (1, 1);
 
--- Insert sample warehouses
+-- Insert sample warehouses (capacity in cubic feet)
 INSERT INTO warehouse (name, location, max_capacity, capacity_alert_threshold) VALUES
-    ('Main Warehouse', '123 Industrial Blvd, New York, NY 10001', 10000, 85.00),
-    ('West Coast Distribution Center', '456 Pacific Ave, Los Angeles, CA 90001', 15000, 80.00),
-    ('East Coast Hub', '789 Atlantic Rd, Boston, MA 02101', 8000, 90.00);
+    ('Main Warehouse', '123 Industrial Blvd, New York, NY 10001', 10000.00, 85.00),
+    ('West Coast Distribution Center', '456 Pacific Ave, Los Angeles, CA 90001', 15000.00, 80.00),
+    ('East Coast Hub', '789 Atlantic Rd, Boston, MA 02101', 8000.00, 90.00);
 
--- Insert sample inventory items
-INSERT INTO inventory_item (sku, name, description, category, brand, quantity, unit_price, reorder_level, warehouse_id, barcode) VALUES
-    ('SKU-001', 'Laptop Computer', 'High-performance business laptop', 'Electronics', 'TechBrand', 50, 999.99, 10, 1, '1234567890123'),
-    ('SKU-002', 'Office Chair', 'Ergonomic office chair with lumbar support', 'Furniture', 'ComfortPlus', 100, 249.99, 20, 1, '1234567890124'),
-    ('SKU-003', 'Wireless Mouse', 'Bluetooth wireless mouse', 'Electronics', 'TechBrand', 200, 29.99, 50, 2, '1234567890125'),
-    ('SKU-004', 'Standing Desk', 'Electric height-adjustable standing desk', 'Furniture', 'ComfortPlus', 30, 599.99, 5, 2, '1234567890126'),
-    ('SKU-005', 'Monitor 27"', '27-inch 4K LED monitor', 'Electronics', 'ViewMaster', 75, 399.99, 15, 3, '1234567890127');
+-- Insert sample inventory items (with volume per unit in cubic feet)
+INSERT INTO inventory_item (sku, name, description, category, brand, quantity, unit_price, volume_per_unit, reorder_level, warehouse_id, barcode) VALUES
+    ('SKU-001', 'Laptop Computer', 'High-performance business laptop', 'Electronics', 'TechBrand', 50, 999.99, 0.50, 10, 1, '1234567890123'),
+    ('SKU-002', 'Office Chair', 'Ergonomic office chair with lumbar support', 'Furniture', 'ComfortPlus', 100, 249.99, 8.00, 20, 1, '1234567890124'),
+    ('SKU-003', 'Wireless Mouse', 'Bluetooth wireless mouse', 'Electronics', 'TechBrand', 200, 29.99, 0.10, 50, 2, '1234567890125'),
+    ('SKU-004', 'Standing Desk', 'Electric height-adjustable standing desk', 'Furniture', 'ComfortPlus', 30, 599.99, 25.00, 5, 2, '1234567890126'),
+    ('SKU-005', 'Monitor 27"', '27-inch 4K LED monitor', 'Electronics', 'ViewMaster', 75, 399.99, 1.50, 15, 3, '1234567890127');
 
 -- ============================================
 -- Useful Views
 -- ============================================
 
--- View: Warehouse utilization summary
+-- View: Warehouse utilization summary (volume-based)
 CREATE VIEW warehouse_utilization AS
 SELECT
     w.id,
     w.name,
     w.location,
-    w.max_capacity,
-    w.current_capacity,
-    ROUND((w.current_capacity::DECIMAL / w.max_capacity * 100), 2) as utilization_percentage,
+    w.max_capacity as max_capacity_cubic_feet,
+    w.current_capacity as current_capacity_cubic_feet,
+    (w.max_capacity - w.current_capacity) as available_capacity_cubic_feet,
+    ROUND((w.current_capacity / NULLIF(w.max_capacity, 0) * 100), 2) as utilization_percentage,
     w.capacity_alert_threshold,
     CASE
-        WHEN (w.current_capacity::DECIMAL / w.max_capacity * 100) >= w.capacity_alert_threshold
+        WHEN (w.current_capacity / NULLIF(w.max_capacity, 0) * 100) >= w.capacity_alert_threshold
         THEN true
         ELSE false
     END as is_alert_triggered
 FROM warehouse w
 WHERE w.is_active = true;
+
+-- View: Inventory items with volume details
+CREATE VIEW inventory_volume_details AS
+SELECT
+    i.id,
+    i.sku,
+    i.name,
+    i.category,
+    i.quantity,
+    i.volume_per_unit,
+    (i.quantity * COALESCE(i.volume_per_unit, 1.00)) as total_volume,
+    w.name as warehouse_name,
+    w.current_capacity as warehouse_current_capacity,
+    w.max_capacity as warehouse_max_capacity,
+    ROUND(((i.quantity * COALESCE(i.volume_per_unit, 1.00)) / NULLIF(w.max_capacity, 0) * 100), 2) as percentage_of_warehouse
+FROM inventory_item i
+JOIN warehouse w ON i.warehouse_id = w.id
+ORDER BY total_volume DESC;
 
 -- View: Low stock items
 CREATE VIEW low_stock_items AS
@@ -419,3 +446,19 @@ ORDER BY sa.timestamp DESC;
 -- Script Complete
 -- ============================================
 COMMENT ON DATABASE postgres IS 'MKTekHub Inventory Management System Database';
+
+-- ============================================
+-- Version 3.0 Changes (Volume-Based Capacity)
+-- ============================================
+-- 1. Changed warehouse.max_capacity from INTEGER to NUMERIC(12,2) for cubic feet
+-- 2. Changed warehouse.current_capacity from INTEGER to NUMERIC(12,2) for cubic feet
+-- 3. Added inventory_item.volume_per_unit NUMERIC(10,2) field (default 1.00 ft³)
+-- 4. Updated update_warehouse_capacity() function to calculate volume (quantity × volume_per_unit)
+-- 5. Updated warehouse_utilization view to show capacity in cubic feet
+-- 6. Added inventory_volume_details view for volume tracking
+-- 7. Updated seed data with realistic volume values
+--
+-- Migration from Version 2.0:
+--   - Run migrate_to_volume_capacity.sql to convert existing data
+--   - Update volume_per_unit values for all items based on actual dimensions
+--   - Adjust warehouse max_capacity to reflect cubic feet instead of unit count

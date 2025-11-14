@@ -12,6 +12,8 @@ import { WarehousesPage } from "./pages/WarehousesPage";
 import { InventoryPage } from "./pages/InventoryPage";
 import { StockTransferPage } from "./pages/StockTransferPage";
 import { StockActivityPage } from "./pages/StockActivityPage";
+import { ReportsPage } from "./pages/ReportsPage";
+import { CustomReportPage } from "./pages/CustomReportPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -77,6 +79,26 @@ function App() {
                   <ProtectedRoute>
                     <Layout>
                       <StockActivityPage />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/reports"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <ReportsPage />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/custom-reports"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <CustomReportPage />
                     </Layout>
                   </ProtectedRoute>
                 }

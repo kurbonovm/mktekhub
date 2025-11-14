@@ -11,7 +11,8 @@ import java.util.List;
 
 /**
  * Entity representing a warehouse in the mktekhub inventory management system.
- * Warehouses store inventory items and have capacity limits and alert thresholds.
+ * Warehouses store inventory items and have volume-based capacity limits and alert thresholds.
+ * Capacity is measured in cubic feet.
  */
 @Entity
 @Table(name = "warehouse")
@@ -27,11 +28,11 @@ public class Warehouse {
     @Column(nullable = false, length = 255)
     private String location;
 
-    @Column(name = "max_capacity", nullable = false)
-    private Integer maxCapacity;
+    @Column(name = "max_capacity", nullable = false, precision = 12, scale = 2)
+    private BigDecimal maxCapacity; // Max capacity in cubic feet
 
-    @Column(name = "current_capacity", nullable = false)
-    private Integer currentCapacity = 0;
+    @Column(name = "current_capacity", nullable = false, precision = 12, scale = 2)
+    private BigDecimal currentCapacity = BigDecimal.ZERO; // Current capacity in cubic feet
 
     @Column(name = "capacity_alert_threshold", precision = 5, scale = 2)
     private BigDecimal capacityAlertThreshold = new BigDecimal("80.00");
@@ -54,7 +55,7 @@ public class Warehouse {
     public Warehouse() {
     }
 
-    public Warehouse(String name, String location, Integer maxCapacity) {
+    public Warehouse(String name, String location, BigDecimal maxCapacity) {
         this.name = name;
         this.location = location;
         this.maxCapacity = maxCapacity;
@@ -85,19 +86,19 @@ public class Warehouse {
         this.location = location;
     }
 
-    public Integer getMaxCapacity() {
+    public BigDecimal getMaxCapacity() {
         return maxCapacity;
     }
 
-    public void setMaxCapacity(Integer maxCapacity) {
+    public void setMaxCapacity(BigDecimal maxCapacity) {
         this.maxCapacity = maxCapacity;
     }
 
-    public Integer getCurrentCapacity() {
+    public BigDecimal getCurrentCapacity() {
         return currentCapacity;
     }
 
-    public void setCurrentCapacity(Integer currentCapacity) {
+    public void setCurrentCapacity(BigDecimal currentCapacity) {
         this.currentCapacity = currentCapacity;
     }
 
@@ -148,11 +149,11 @@ public class Warehouse {
      * @return Utilization percentage as BigDecimal
      */
     public BigDecimal getUtilizationPercentage() {
-        if (maxCapacity == 0) {
+        if (maxCapacity.compareTo(BigDecimal.ZERO) == 0) {
             return BigDecimal.ZERO;
         }
-        return BigDecimal.valueOf(currentCapacity)
-                .divide(BigDecimal.valueOf(maxCapacity), 2, java.math.RoundingMode.HALF_UP)
+        return currentCapacity
+                .divide(maxCapacity, 2, java.math.RoundingMode.HALF_UP)
                 .multiply(BigDecimal.valueOf(100));
     }
 
@@ -165,20 +166,23 @@ public class Warehouse {
     }
 
     /**
-     * Checks if adding the specified quantity would exceed warehouse capacity.
-     * @param quantity Quantity to check
+     * Checks if adding the specified volume would exceed warehouse capacity.
+     * @param volume Volume in cubic feet to check
      * @return true if capacity would be exceeded, false otherwise
      */
-    public boolean wouldExceedCapacity(Integer quantity) {
-        return (currentCapacity + quantity) > maxCapacity;
+    public boolean wouldExceedCapacity(BigDecimal volume) {
+        if (volume == null) {
+            return false;
+        }
+        return currentCapacity.add(volume).compareTo(maxCapacity) > 0;
     }
 
     /**
      * Gets the available capacity in the warehouse.
-     * @return Available capacity as Integer
+     * @return Available capacity in cubic feet as BigDecimal
      */
-    public Integer getAvailableCapacity() {
-        return maxCapacity - currentCapacity;
+    public BigDecimal getAvailableCapacity() {
+        return maxCapacity.subtract(currentCapacity);
     }
 
     @Override

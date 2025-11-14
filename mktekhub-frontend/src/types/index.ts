@@ -34,8 +34,8 @@ export interface Warehouse {
   id: number;
   name: string;
   location: string;
-  maxCapacity: number;
-  currentCapacity: number;
+  maxCapacity: number; // Volume in cubic feet
+  currentCapacity: number; // Volume in cubic feet
   capacityAlertThreshold: number;
   utilizationPercentage: number;
   isAlertTriggered: boolean;
@@ -47,7 +47,7 @@ export interface Warehouse {
 export interface WarehouseRequest {
   name: string;
   location: string;
-  maxCapacity: number;
+  maxCapacity: number; // Volume in cubic feet
   capacityAlertThreshold?: number;
 }
 
@@ -61,6 +61,8 @@ export interface InventoryItem {
   brand?: string;
   quantity: number;
   unitPrice?: number;
+  volumePerUnit?: number; // Volume per unit in cubic feet
+  totalVolume?: number; // Total volume in cubic feet
   reorderLevel?: number;
   warrantyEndDate?: string;
   expirationDate?: string;
@@ -83,6 +85,7 @@ export interface InventoryItemRequest {
   brand?: string;
   quantity: number;
   unitPrice?: number;
+  volumePerUnit?: number; // Volume per unit in cubic feet
   reorderLevel?: number;
   warehouseId: number;
   warrantyEndDate?: string;
