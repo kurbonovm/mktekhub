@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { warehouseService } from "../services/warehouseService";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../contexts/ToastContext";
-import { ConfirmDialog } from "../components/common";
+import { ConfirmDialog, CardSkeleton } from "../components/common";
 import type { Warehouse, WarehouseRequest } from "../types";
 
 export const WarehousesPage = () => {
@@ -30,6 +30,7 @@ export const WarehousesPage = () => {
     data: warehouses,
     isLoading,
     error,
+    isRefetching,
   } = useQuery({
     queryKey: ["warehouses"],
     queryFn: () => warehouseService.getAll(),
@@ -170,100 +171,104 @@ export const WarehousesPage = () => {
       </div>
 
       {/* Warehouses Grid */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {warehouses?.map((warehouse) => (
-          <div
-            key={warehouse.id}
-            className="rounded-lg bg-white p-6 shadow hover:shadow-lg"
-          >
-            <div className="mb-4 flex items-start justify-between">
-              <div>
-                <h3 className="text-xl font-semibold text-gray-900">
-                  {warehouse.name}
-                </h3>
-                <p className="text-sm text-gray-600">{warehouse.location}</p>
-              </div>
-              <span
-                className={`rounded-full px-3 py-1 text-xs font-medium ${
-                  warehouse.isActive
-                    ? "bg-green-100 text-green-800"
-                    : "bg-red-100 text-red-800"
-                }`}
-              >
-                {warehouse.isActive ? "Active" : "Inactive"}
-              </span>
-            </div>
-
-            <div className="mb-4 space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Capacity:</span>
-                <span className="font-medium text-gray-900">
-                  {warehouse.currentCapacity.toFixed(2)} /{" "}
-                  {warehouse.maxCapacity.toFixed(2)} ft³
-                </span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Utilization:</span>
-                <span className="font-medium text-gray-900">
-                  {warehouse.utilizationPercentage.toFixed(1)}%
-                </span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Alert Threshold:</span>
-                <span className="font-medium text-gray-900">
-                  {warehouse.capacityAlertThreshold}%
-                </span>
-              </div>
-            </div>
-
-            {/* Progress Bar */}
-            <div className="mb-4 h-2 w-full overflow-hidden rounded-full bg-gray-200">
-              <div
-                className={`h-full ${
-                  warehouse.utilizationPercentage > 90
-                    ? "bg-red-600"
-                    : warehouse.utilizationPercentage > 75
-                      ? "bg-yellow-600"
-                      : "bg-green-600"
-                }`}
-                style={{
-                  width: `${warehouse.utilizationPercentage}%`,
-                }}
-              />
-            </div>
-
-            {isAdminOrManager && (
-              <div className="flex flex-col space-y-2">
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => openEditModal(warehouse)}
-                    className="flex-1 rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDeleteClick(warehouse)}
-                    disabled={warehouse.currentCapacity > 0}
-                    className="flex-1 rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-gray-400"
-                    title={
-                      warehouse.currentCapacity > 0
-                        ? "Cannot delete warehouse with inventory"
-                        : "Delete warehouse"
-                    }
-                  >
-                    Delete
-                  </button>
+      {isRefetching && !isLoading ? (
+        <CardSkeleton cards={6} />
+      ) : (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {warehouses?.map((warehouse) => (
+            <div
+              key={warehouse.id}
+              className="rounded-lg bg-white p-6 shadow hover:shadow-lg"
+            >
+              <div className="mb-4 flex items-start justify-between">
+                <div>
+                  <h3 className="text-xl font-semibold text-gray-900">
+                    {warehouse.name}
+                  </h3>
+                  <p className="text-sm text-gray-600">{warehouse.location}</p>
                 </div>
-                {warehouse.currentCapacity > 0 && (
-                  <p className="text-xs text-gray-600 text-center">
-                    Remove all items before deleting
-                  </p>
-                )}
+                <span
+                  className={`rounded-full px-3 py-1 text-xs font-medium ${
+                    warehouse.isActive
+                      ? "bg-green-100 text-green-800"
+                      : "bg-red-100 text-red-800"
+                  }`}
+                >
+                  {warehouse.isActive ? "Active" : "Inactive"}
+                </span>
               </div>
-            )}
-          </div>
-        ))}
-      </div>
+
+              <div className="mb-4 space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Capacity:</span>
+                  <span className="font-medium text-gray-900">
+                    {warehouse.currentCapacity.toFixed(2)} /{" "}
+                    {warehouse.maxCapacity.toFixed(2)} ft³
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Utilization:</span>
+                  <span className="font-medium text-gray-900">
+                    {warehouse.utilizationPercentage.toFixed(1)}%
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Alert Threshold:</span>
+                  <span className="font-medium text-gray-900">
+                    {warehouse.capacityAlertThreshold}%
+                  </span>
+                </div>
+              </div>
+
+              {/* Progress Bar */}
+              <div className="mb-4 h-2 w-full overflow-hidden rounded-full bg-gray-200">
+                <div
+                  className={`h-full ${
+                    warehouse.utilizationPercentage > 90
+                      ? "bg-red-600"
+                      : warehouse.utilizationPercentage > 75
+                        ? "bg-yellow-600"
+                        : "bg-green-600"
+                  }`}
+                  style={{
+                    width: `${warehouse.utilizationPercentage}%`,
+                  }}
+                />
+              </div>
+
+              {isAdminOrManager && (
+                <div className="flex flex-col space-y-2">
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => openEditModal(warehouse)}
+                      className="flex-1 rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDeleteClick(warehouse)}
+                      disabled={warehouse.currentCapacity > 0}
+                      className="flex-1 rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-gray-400"
+                      title={
+                        warehouse.currentCapacity > 0
+                          ? "Cannot delete warehouse with inventory"
+                          : "Delete warehouse"
+                      }
+                    >
+                      Delete
+                    </button>
+                  </div>
+                  {warehouse.currentCapacity > 0 && (
+                    <p className="text-xs text-gray-600 text-center">
+                      Remove all items before deleting
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Create/Edit Modal */}
       {isModalOpen && (

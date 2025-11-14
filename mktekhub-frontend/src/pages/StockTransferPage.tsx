@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { inventoryService } from "../services/inventoryService";
 import { warehouseService } from "../services/warehouseService";
+import { Skeleton } from "../components/common";
 import type { StockTransferRequest } from "../types";
 import api from "../services/api";
 
@@ -18,15 +19,16 @@ export const StockTransferPage = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
-  const { data: warehouses } = useQuery({
+  const { data: warehouses, isRefetching: isWarehousesRefetching } = useQuery({
     queryKey: ["warehouses"],
     queryFn: () => warehouseService.getAll(),
   });
 
-  const { data: inventoryItems } = useQuery({
-    queryKey: ["inventory"],
-    queryFn: () => inventoryService.getAll(),
-  });
+  const { data: inventoryItems, isRefetching: isInventoryRefetching } =
+    useQuery({
+      queryKey: ["inventory"],
+      queryFn: () => inventoryService.getAll(),
+    });
 
   // Group inventory items by SKU to show unique items with total quantities
   const uniqueItems = useMemo(() => {
@@ -251,7 +253,11 @@ export const StockTransferPage = () => {
                   onChange={(e) => setItemSearchQuery(e.target.value)}
                 />
                 <div className="max-h-60 overflow-y-auto rounded-md border border-gray-300">
-                  {filteredItems.length > 0 ? (
+                  {isInventoryRefetching ? (
+                    <div className="p-4 space-y-2">
+                      <Skeleton variant="text" className="h-16" count={5} />
+                    </div>
+                  ) : filteredItems.length > 0 ? (
                     filteredItems.map((item) => (
                       <button
                         key={item.sku}
@@ -389,24 +395,30 @@ export const StockTransferPage = () => {
                 <label className="block text-sm font-medium text-gray-700">
                   Step 3: Select Destination Warehouse
                 </label>
-                <select
-                  required
-                  className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-3 text-base focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm"
-                  value={formData.destinationWarehouseId}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      destinationWarehouseId: parseInt(e.target.value),
-                    })
-                  }
-                >
-                  <option value="0">Select destination warehouse</option>
-                  {availableDestinationWarehouses.map((warehouse) => (
-                    <option key={warehouse.id} value={warehouse.id}>
-                      {warehouse.name} - {warehouse.location}
-                    </option>
-                  ))}
-                </select>
+                {isWarehousesRefetching ? (
+                  <div className="mt-1">
+                    <Skeleton variant="text" className="h-12" />
+                  </div>
+                ) : (
+                  <select
+                    required
+                    className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-3 text-base focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm"
+                    value={formData.destinationWarehouseId}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        destinationWarehouseId: parseInt(e.target.value),
+                      })
+                    }
+                  >
+                    <option value="0">Select destination warehouse</option>
+                    {availableDestinationWarehouses.map((warehouse) => (
+                      <option key={warehouse.id} value={warehouse.id}>
+                        {warehouse.name} - {warehouse.location}
+                      </option>
+                    ))}
+                  </select>
+                )}
               </div>
 
               <div>
