@@ -1,9 +1,8 @@
 import { ExpirationBadge, WarrantyBadge, Tooltip } from "../common";
-import type { InventoryItem, Warehouse } from "../../types";
+import type { InventoryItem } from "../../types";
 
 interface InventoryTableProps {
   items: InventoryItem[];
-  warehouses: Warehouse[];
   isAdminOrManager: boolean;
   onAdjust: (item: InventoryItem) => void;
   onEdit: (item: InventoryItem) => void;
@@ -14,7 +13,6 @@ interface InventoryTableProps {
 
 export const InventoryTable = ({
   items,
-  warehouses,
   isAdminOrManager,
   onAdjust,
   onEdit,

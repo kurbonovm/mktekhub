@@ -409,7 +409,6 @@ export const InventoryPage = () => {
       ) : (
         <InventoryMobileCard
           items={filteredItems}
-          warehouses={warehouses || []}
           isAdminOrManager={isAdminOrManager}
           onAdjust={openAdjustModal}
           onEdit={openEditModal}
@@ -432,7 +431,6 @@ export const InventoryPage = () => {
       ) : (
         <InventoryTable
           items={filteredItems}
-          warehouses={warehouses || []}
           isAdminOrManager={isAdminOrManager}
           onAdjust={openAdjustModal}
           onEdit={openEditModal}

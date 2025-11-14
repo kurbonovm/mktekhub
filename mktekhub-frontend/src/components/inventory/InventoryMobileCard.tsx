@@ -1,9 +1,8 @@
 import { ExpirationBadge, WarrantyBadge } from "../common";
-import type { InventoryItem, Warehouse } from "../../types";
+import type { InventoryItem } from "../../types";
 
 interface InventoryMobileCardProps {
   items: InventoryItem[];
-  warehouses: Warehouse[];
   isAdminOrManager: boolean;
   onAdjust: (item: InventoryItem) => void;
   onEdit: (item: InventoryItem) => void;
@@ -14,7 +13,6 @@ interface InventoryMobileCardProps {
 
 export const InventoryMobileCard = ({
   items,
-  warehouses,
   isAdminOrManager,
   onAdjust,
   onEdit,
@@ -78,10 +76,7 @@ export const InventoryMobileCard = ({
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">Warehouse:</span>
-                <span className="font-medium">
-                  {warehouses?.find((w) => w.id === item.warehouseId)?.name ||
-                    "N/A"}
-                </span>
+                <span className="font-medium">{item.warehouseName}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">Quantity:</span>
