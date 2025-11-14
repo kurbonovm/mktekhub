@@ -2,11 +2,13 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { warehouseService } from "../services/warehouseService";
 import { useAuth } from "../contexts/AuthContext";
+import { useToast } from "../contexts/ToastContext";
 import type { Warehouse, WarehouseRequest } from "../types";
 
 export const WarehousesPage = () => {
   const queryClient = useQueryClient();
   const { hasRole } = useAuth();
+  const toast = useToast();
   const isAdminOrManager = hasRole("ADMIN") || hasRole("MANAGER");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingWarehouse, setEditingWarehouse] = useState<Warehouse | null>(
@@ -36,7 +38,13 @@ export const WarehousesPage = () => {
     mutationFn: (data: WarehouseRequest) => warehouseService.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["warehouses"] });
+      toast.success("Warehouse created successfully");
       closeModal();
+    },
+    onError: (error: any) => {
+      const message =
+        error?.response?.data?.message || "Failed to create warehouse";
+      toast.error(message);
     },
   });
 
@@ -45,7 +53,13 @@ export const WarehousesPage = () => {
       warehouseService.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["warehouses"] });
+      toast.success("Warehouse updated successfully");
       closeModal();
+    },
+    onError: (error: any) => {
+      const message =
+        error?.response?.data?.message || "Failed to update warehouse";
+      toast.error(message);
     },
   });
 
@@ -53,6 +67,12 @@ export const WarehousesPage = () => {
     mutationFn: (id: number) => warehouseService.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["warehouses"] });
+      toast.success("Warehouse deleted successfully");
+    },
+    onError: (error: any) => {
+      const message =
+        error?.response?.data?.message || "Failed to delete warehouse";
+      toast.error(message);
     },
   });
 
@@ -212,19 +232,32 @@ export const WarehousesPage = () => {
             </div>
 
             {isAdminOrManager && (
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => openEditModal(warehouse)}
-                  className="flex-1 rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDeleteClick(warehouse)}
-                  className="flex-1 rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700"
-                >
-                  Delete
-                </button>
+              <div className="flex flex-col space-y-2">
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => openEditModal(warehouse)}
+                    className="flex-1 rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDeleteClick(warehouse)}
+                    disabled={warehouse.currentCapacity > 0}
+                    className="flex-1 rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-gray-400"
+                    title={
+                      warehouse.currentCapacity > 0
+                        ? "Cannot delete warehouse with inventory"
+                        : "Delete warehouse"
+                    }
+                  >
+                    Delete
+                  </button>
+                </div>
+                {warehouse.currentCapacity > 0 && (
+                  <p className="text-xs text-gray-600 text-center">
+                    Remove all items before deleting
+                  </p>
+                )}
               </div>
             )}
           </div>

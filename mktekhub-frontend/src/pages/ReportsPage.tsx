@@ -1,7 +1,9 @@
 import { useState } from "react";
 import api from "../services/api";
+import { useToast } from "../contexts/ToastContext";
 
 export const ReportsPage = () => {
+  const toast = useToast();
   const [isDownloading, setIsDownloading] = useState<string | null>(null);
 
   const downloadReport = async (endpoint: string, reportName: string) => {
@@ -33,7 +35,7 @@ export const ReportsPage = () => {
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error(`Error downloading ${reportName}:`, error);
-      alert(`Failed to download ${reportName}. Please try again.`);
+      toast.error(`Failed to download ${reportName}. Please try again.`);
     } finally {
       setIsDownloading(null);
     }
