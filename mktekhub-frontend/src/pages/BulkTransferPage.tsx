@@ -60,9 +60,10 @@ export const BulkTransferPage = () => {
       }
       setShowConfirmation(false);
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       const message =
-        error?.response?.data?.message || "Failed to process bulk transfer";
+        (error as { response?: { data?: { message?: string } } })?.response
+          ?.data?.message || "Failed to process bulk transfer";
       toast.error(message);
     },
   });

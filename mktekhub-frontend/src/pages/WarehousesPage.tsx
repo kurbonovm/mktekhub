@@ -43,9 +43,10 @@ export const WarehousesPage = () => {
       toast.success("Warehouse created successfully");
       closeModal();
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       const message =
-        error?.response?.data?.message || "Failed to create warehouse";
+        (error as { response?: { data?: { message?: string } } })?.response
+          ?.data?.message || "Failed to create warehouse";
       toast.error(message);
     },
   });
@@ -58,9 +59,10 @@ export const WarehousesPage = () => {
       toast.success("Warehouse updated successfully");
       closeModal();
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       const message =
-        error?.response?.data?.message || "Failed to update warehouse";
+        (error as { response?: { data?: { message?: string } } })?.response
+          ?.data?.message || "Failed to update warehouse";
       toast.error(message);
     },
   });
@@ -71,9 +73,10 @@ export const WarehousesPage = () => {
       queryClient.invalidateQueries({ queryKey: ["warehouses"] });
       toast.success("Warehouse deleted successfully");
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       const message =
-        error?.response?.data?.message || "Failed to delete warehouse";
+        (error as { response?: { data?: { message?: string } } })?.response
+          ?.data?.message || "Failed to delete warehouse";
       toast.error(message);
     },
   });
