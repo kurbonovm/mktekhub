@@ -6,16 +6,24 @@ import com.mktekhub.inventory.exception.DuplicateResourceException;
 import com.mktekhub.inventory.exception.InvalidOperationException;
 import com.mktekhub.inventory.exception.ResourceNotFoundException;
 import com.mktekhub.inventory.exception.WarehouseCapacityExceededException;
+import com.mktekhub.inventory.model.ActivityType;
 import com.mktekhub.inventory.model.InventoryItem;
+import com.mktekhub.inventory.model.StockActivity;
+import com.mktekhub.inventory.model.User;
 import com.mktekhub.inventory.model.Warehouse;
 import com.mktekhub.inventory.repository.InventoryItemRepository;
+import com.mktekhub.inventory.repository.StockActivityRepository;
+import com.mktekhub.inventory.repository.UserRepository;
 import com.mktekhub.inventory.repository.WarehouseRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -30,6 +38,12 @@ public class InventoryItemService {
 
     @Autowired
     private WarehouseRepository warehouseRepository;
+
+    @Autowired
+    private StockActivityRepository stockActivityRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     /**
      * Get all inventory items.
@@ -169,9 +183,10 @@ public class InventoryItemService {
             throw new DuplicateResourceException("InventoryItem", "sku", request.getSku());
         }
 
-        // Store old values for capacity adjustment
+        // Store old values for capacity adjustment and activity logging
         Warehouse oldWarehouse = item.getWarehouse();
         BigDecimal oldVolume = item.getTotalVolume();
+        int oldQuantity = item.getQuantity();
 
         // Calculate new volume
         BigDecimal newVolumePerUnit = request.getVolumePerUnit() != null ? request.getVolumePerUnit() : BigDecimal.ZERO;
@@ -228,6 +243,37 @@ public class InventoryItemService {
         item.setBarcode(request.getBarcode());
 
         InventoryItem updated = inventoryItemRepository.save(item);
+
+        // Log UPDATE activity
+        User currentUser = getCurrentUser();
+        StockActivity activity = new StockActivity();
+        activity.setItem(updated);
+        activity.setItemSku(updated.getSku());
+        activity.setActivityType(ActivityType.UPDATE);
+        activity.setQuantityChange(updated.getQuantity() - oldQuantity);
+        activity.setPreviousQuantity(oldQuantity);
+        activity.setNewQuantity(updated.getQuantity());
+        activity.setPerformedBy(currentUser);
+
+        // Build notes describing what changed
+        List<String> changes = new ArrayList<>();
+        if (!oldWarehouse.getId().equals(updated.getWarehouse().getId())) {
+            changes.add("Warehouse changed from '" + oldWarehouse.getName() + "' to '" + updated.getWarehouse().getName() + "'");
+            activity.setSourceWarehouse(oldWarehouse);
+            activity.setDestinationWarehouse(updated.getWarehouse());
+        }
+        if (oldVolume.compareTo(newTotalVolume) != 0) {
+            changes.add("Volume changed from " + oldVolume + " to " + newTotalVolume + " ft³");
+        }
+
+        if (!changes.isEmpty()) {
+            activity.setNotes("Item updated: " + String.join("; ", changes));
+        } else {
+            activity.setNotes("Item details updated");
+        }
+
+        stockActivityRepository.save(activity);
+
         return InventoryItemResponse.fromEntity(updated);
     }
 
@@ -255,7 +301,8 @@ public class InventoryItemService {
         InventoryItem item = inventoryItemRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("InventoryItem", "id", id));
 
-        int newQuantity = item.getQuantity() + quantityChange;
+        int oldQuantity = item.getQuantity();
+        int newQuantity = oldQuantity + quantityChange;
 
         if (newQuantity < 0) {
             throw new InvalidOperationException("Quantity adjustment would result in negative quantity");
@@ -281,6 +328,29 @@ public class InventoryItemService {
         warehouse.setCurrentCapacity(warehouse.getCurrentCapacity().add(volumeChange));
         warehouseRepository.save(warehouse);
 
+        // Log ADJUSTMENT activity
+        User currentUser = getCurrentUser();
+        StockActivity activity = new StockActivity();
+        activity.setItem(updated);
+        activity.setItemSku(updated.getSku());
+        activity.setActivityType(ActivityType.ADJUSTMENT);
+        activity.setQuantityChange(quantityChange);
+        activity.setPreviousQuantity(oldQuantity);
+        activity.setNewQuantity(newQuantity);
+        activity.setPerformedBy(currentUser);
+        activity.setNotes("Manual quantity adjustment: " + (quantityChange > 0 ? "+" : "") + quantityChange);
+        stockActivityRepository.save(activity);
+
         return InventoryItemResponse.fromEntity(updated);
+    }
+
+    /**
+     * Get the currently authenticated user from Spring Security context.
+     */
+    private User getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "username", username));
     }
 }
