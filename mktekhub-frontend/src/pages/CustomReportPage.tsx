@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import api from "../services/api";
 import { type Warehouse } from "../types";
+import { useToast } from "../contexts/ToastContext";
 
 type ReportType = "stock-activity" | "inventory-valuation";
 
@@ -12,6 +13,7 @@ interface InventoryItemBasic {
 }
 
 export const CustomReportPage = () => {
+  const toast = useToast();
   const [reportType, setReportType] = useState<ReportType>("stock-activity");
   const [isDownloading, setIsDownloading] = useState(false);
 
@@ -120,7 +122,7 @@ export const CustomReportPage = () => {
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Error downloading report:", error);
-      alert("Failed to download report. Please try again.");
+      toast.error("Failed to download report. Please try again.");
     } finally {
       setIsDownloading(false);
     }

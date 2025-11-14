@@ -2,11 +2,14 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { warehouseService } from "../services/warehouseService";
 import { useAuth } from "../contexts/AuthContext";
+import { useToast } from "../contexts/ToastContext";
+import { ConfirmDialog, CardSkeleton } from "../components/common";
 import type { Warehouse, WarehouseRequest } from "../types";
 
 export const WarehousesPage = () => {
   const queryClient = useQueryClient();
   const { hasRole } = useAuth();
+  const toast = useToast();
   const isAdminOrManager = hasRole("ADMIN") || hasRole("MANAGER");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingWarehouse, setEditingWarehouse] = useState<Warehouse | null>(
@@ -27,6 +30,7 @@ export const WarehousesPage = () => {
     data: warehouses,
     isLoading,
     error,
+    isRefetching,
   } = useQuery({
     queryKey: ["warehouses"],
     queryFn: () => warehouseService.getAll(),
@@ -36,7 +40,14 @@ export const WarehousesPage = () => {
     mutationFn: (data: WarehouseRequest) => warehouseService.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["warehouses"] });
+      toast.success("Warehouse created successfully");
       closeModal();
+    },
+    onError: (error: unknown) => {
+      const message =
+        (error as { response?: { data?: { message?: string } } })?.response
+          ?.data?.message || "Failed to create warehouse";
+      toast.error(message);
     },
   });
 
@@ -45,7 +56,14 @@ export const WarehousesPage = () => {
       warehouseService.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["warehouses"] });
+      toast.success("Warehouse updated successfully");
       closeModal();
+    },
+    onError: (error: unknown) => {
+      const message =
+        (error as { response?: { data?: { message?: string } } })?.response
+          ?.data?.message || "Failed to update warehouse";
+      toast.error(message);
     },
   });
 
@@ -53,6 +71,13 @@ export const WarehousesPage = () => {
     mutationFn: (id: number) => warehouseService.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["warehouses"] });
+      toast.success("Warehouse deleted successfully");
+    },
+    onError: (error: unknown) => {
+      const message =
+        (error as { response?: { data?: { message?: string } } })?.response
+          ?.data?.message || "Failed to delete warehouse";
+      toast.error(message);
     },
   });
 
@@ -149,87 +174,104 @@ export const WarehousesPage = () => {
       </div>
 
       {/* Warehouses Grid */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {warehouses?.map((warehouse) => (
-          <div
-            key={warehouse.id}
-            className="rounded-lg bg-white p-6 shadow hover:shadow-lg"
-          >
-            <div className="mb-4 flex items-start justify-between">
-              <div>
-                <h3 className="text-xl font-semibold text-gray-900">
-                  {warehouse.name}
-                </h3>
-                <p className="text-sm text-gray-600">{warehouse.location}</p>
-              </div>
-              <span
-                className={`rounded-full px-3 py-1 text-xs font-medium ${
-                  warehouse.isActive
-                    ? "bg-green-100 text-green-800"
-                    : "bg-red-100 text-red-800"
-                }`}
-              >
-                {warehouse.isActive ? "Active" : "Inactive"}
-              </span>
-            </div>
-
-            <div className="mb-4 space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Capacity:</span>
-                <span className="font-medium text-gray-900">
-                  {warehouse.currentCapacity.toFixed(2)} /{" "}
-                  {warehouse.maxCapacity.toFixed(2)} ft³
-                </span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Utilization:</span>
-                <span className="font-medium text-gray-900">
-                  {warehouse.utilizationPercentage.toFixed(1)}%
-                </span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Alert Threshold:</span>
-                <span className="font-medium text-gray-900">
-                  {warehouse.capacityAlertThreshold}%
-                </span>
-              </div>
-            </div>
-
-            {/* Progress Bar */}
-            <div className="mb-4 h-2 w-full overflow-hidden rounded-full bg-gray-200">
-              <div
-                className={`h-full ${
-                  warehouse.utilizationPercentage > 90
-                    ? "bg-red-600"
-                    : warehouse.utilizationPercentage > 75
-                      ? "bg-yellow-600"
-                      : "bg-green-600"
-                }`}
-                style={{
-                  width: `${warehouse.utilizationPercentage}%`,
-                }}
-              />
-            </div>
-
-            {isAdminOrManager && (
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => openEditModal(warehouse)}
-                  className="flex-1 rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+      {isRefetching && !isLoading ? (
+        <CardSkeleton cards={6} />
+      ) : (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {warehouses?.map((warehouse) => (
+            <div
+              key={warehouse.id}
+              className="rounded-lg bg-white p-6 shadow hover:shadow-lg"
+            >
+              <div className="mb-4 flex items-start justify-between">
+                <div>
+                  <h3 className="text-xl font-semibold text-gray-900">
+                    {warehouse.name}
+                  </h3>
+                  <p className="text-sm text-gray-600">{warehouse.location}</p>
+                </div>
+                <span
+                  className={`rounded-full px-3 py-1 text-xs font-medium ${
+                    warehouse.isActive
+                      ? "bg-green-100 text-green-800"
+                      : "bg-red-100 text-red-800"
+                  }`}
                 >
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDeleteClick(warehouse)}
-                  className="flex-1 rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700"
-                >
-                  Delete
-                </button>
+                  {warehouse.isActive ? "Active" : "Inactive"}
+                </span>
               </div>
-            )}
-          </div>
-        ))}
-      </div>
+
+              <div className="mb-4 space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Capacity:</span>
+                  <span className="font-medium text-gray-900">
+                    {warehouse.currentCapacity.toFixed(2)} /{" "}
+                    {warehouse.maxCapacity.toFixed(2)} ft³
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Utilization:</span>
+                  <span className="font-medium text-gray-900">
+                    {warehouse.utilizationPercentage.toFixed(1)}%
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Alert Threshold:</span>
+                  <span className="font-medium text-gray-900">
+                    {warehouse.capacityAlertThreshold}%
+                  </span>
+                </div>
+              </div>
+
+              {/* Progress Bar */}
+              <div className="mb-4 h-2 w-full overflow-hidden rounded-full bg-gray-200">
+                <div
+                  className={`h-full ${
+                    warehouse.utilizationPercentage > 90
+                      ? "bg-red-600"
+                      : warehouse.utilizationPercentage > 75
+                        ? "bg-yellow-600"
+                        : "bg-green-600"
+                  }`}
+                  style={{
+                    width: `${warehouse.utilizationPercentage}%`,
+                  }}
+                />
+              </div>
+
+              {isAdminOrManager && (
+                <div className="flex flex-col space-y-2">
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => openEditModal(warehouse)}
+                      className="flex-1 rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDeleteClick(warehouse)}
+                      disabled={warehouse.currentCapacity > 0}
+                      className="flex-1 rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-gray-400"
+                      title={
+                        warehouse.currentCapacity > 0
+                          ? "Cannot delete warehouse with inventory"
+                          : "Delete warehouse"
+                      }
+                    >
+                      Delete
+                    </button>
+                  </div>
+                  {warehouse.currentCapacity > 0 && (
+                    <p className="text-xs text-gray-600 text-center">
+                      Remove all items before deleting
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Create/Edit Modal */}
       {isModalOpen && (
@@ -353,54 +395,15 @@ export const WarehousesPage = () => {
       )}
 
       {/* Delete Confirmation Dialog */}
-      {deleteConfirmOpen && warehouseToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
-            <div className="mb-4">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
-                <svg
-                  className="h-6 w-6 text-red-600"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth="1.5"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
-                  />
-                </svg>
-              </div>
-              <h3 className="mt-4 text-center text-lg font-semibold text-gray-900">
-                Delete Warehouse
-              </h3>
-              <p className="mt-2 text-center text-sm text-gray-600">
-                Are you sure you want to delete{" "}
-                <span className="font-semibold">{warehouseToDelete.name}</span>?
-                This action cannot be undone.
-              </p>
-            </div>
-            <div className="flex space-x-3">
-              <button
-                type="button"
-                onClick={handleDeleteCancel}
-                className="flex-1 rounded-md bg-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-400"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleDeleteConfirm}
-                disabled={deleteMutation.isPending}
-                className="flex-1 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:bg-gray-400"
-              >
-                {deleteMutation.isPending ? "Deleting..." : "Delete"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmDialog
+        isOpen={deleteConfirmOpen && warehouseToDelete !== null}
+        title="Delete Warehouse"
+        message={`Are you sure you want to delete "${warehouseToDelete?.name}"? This action cannot be undone.`}
+        confirmText="Delete"
+        variant="danger"
+        onConfirm={handleDeleteConfirm}
+        onCancel={handleDeleteCancel}
+      />
     </div>
   );
 };

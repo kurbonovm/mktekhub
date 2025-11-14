@@ -6,3 +6,4 @@ export { ToastContainer } from "./Toast";
 export { ConfirmDialog } from "./ConfirmDialog";
 export { Breadcrumb, type BreadcrumbItem } from "./Breadcrumb";
 export { Tooltip } from "./Tooltip";
+export { Skeleton, TableSkeleton, CardSkeleton } from "./Skeleton";

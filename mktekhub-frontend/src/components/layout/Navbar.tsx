@@ -21,7 +21,7 @@ export const Navbar = () => {
   const isAdminOrManager = hasRole("ADMIN") || hasRole("MANAGER");
 
   return (
-    <nav className="relative z-50 bg-blue-600 shadow-lg">
+    <nav className="sticky top-0 z-50 bg-blue-600 shadow-lg">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
@@ -56,12 +56,20 @@ export const Navbar = () => {
               Inventory
             </Link>
             {isAdminOrManager && (
-              <Link
-                to="/stock-transfer"
-                className="rounded-md px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
-              >
-                Stock Transfer
-              </Link>
+              <>
+                <Link
+                  to="/stock-transfer"
+                  className="rounded-md px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                >
+                  Stock Transfer
+                </Link>
+                <Link
+                  to="/bulk-transfer"
+                  className="rounded-md px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                >
+                  Bulk Transfer
+                </Link>
+              </>
             )}
             <Link
               to="/stock-activity"
@@ -190,13 +198,22 @@ export const Navbar = () => {
                 Inventory
               </Link>
               {isAdminOrManager && (
-                <Link
-                  to="/stock-transfer"
-                  className="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-700"
-                  onClick={closeMobileMenu}
-                >
-                  Stock Transfer
-                </Link>
+                <>
+                  <Link
+                    to="/stock-transfer"
+                    className="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-700"
+                    onClick={closeMobileMenu}
+                  >
+                    Stock Transfer
+                  </Link>
+                  <Link
+                    to="/bulk-transfer"
+                    className="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-700"
+                    onClick={closeMobileMenu}
+                  >
+                    Bulk Transfer
+                  </Link>
+                </>
               )}
               <Link
                 to="/stock-activity"

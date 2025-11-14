@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { inventoryService } from "../services/inventoryService";
 import { warehouseService } from "../services/warehouseService";
+import { Skeleton } from "../components/common";
 import type { StockTransferRequest } from "../types";
 import api from "../services/api";
 
@@ -18,15 +19,16 @@ export const StockTransferPage = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
-  const { data: warehouses } = useQuery({
+  const { data: warehouses, isRefetching: isWarehousesRefetching } = useQuery({
     queryKey: ["warehouses"],
     queryFn: () => warehouseService.getAll(),
   });
 
-  const { data: inventoryItems } = useQuery({
-    queryKey: ["inventory"],
-    queryFn: () => inventoryService.getAll(),
-  });
+  const { data: inventoryItems, isRefetching: isInventoryRefetching } =
+    useQuery({
+      queryKey: ["inventory"],
+      queryFn: () => inventoryService.getAll(),
+    });
 
   // Group inventory items by SKU to show unique items with total quantities
   const uniqueItems = useMemo(() => {
@@ -110,6 +112,22 @@ export const StockTransferPage = () => {
     );
     return location?.quantity || 0;
   }, [formData.sourceWarehouseId, selectedItem]);
+
+  // Check if selected item is expired
+  const selectedItemDetails = useMemo(() => {
+    if (!formData.itemSku || !formData.sourceWarehouseId || !inventoryItems)
+      return null;
+    return inventoryItems.find(
+      (item) =>
+        item.sku === formData.itemSku &&
+        item.warehouseId === formData.sourceWarehouseId,
+    );
+  }, [formData.itemSku, formData.sourceWarehouseId, inventoryItems]);
+
+  const isExpired = useMemo(() => {
+    if (!selectedItemDetails?.expirationDate) return false;
+    return new Date(selectedItemDetails.expirationDate) < new Date();
+  }, [selectedItemDetails]);
 
   // Get filtered destination warehouses (exclude source)
   const availableDestinationWarehouses = useMemo(() => {
@@ -235,7 +253,11 @@ export const StockTransferPage = () => {
                   onChange={(e) => setItemSearchQuery(e.target.value)}
                 />
                 <div className="max-h-60 overflow-y-auto rounded-md border border-gray-300">
-                  {filteredItems.length > 0 ? (
+                  {isInventoryRefetching ? (
+                    <div className="p-4 space-y-2">
+                      <Skeleton variant="text" className="h-16" count={5} />
+                    </div>
+                  ) : filteredItems.length > 0 ? (
                     filteredItems.map((item) => (
                       <button
                         key={item.sku}
@@ -263,36 +285,40 @@ export const StockTransferPage = () => {
                 </div>
               </div>
             ) : (
-              <div className="mt-2 flex items-center justify-between rounded-md border border-blue-200 bg-blue-50 p-4">
-                <div>
-                  <div className="font-medium text-gray-900">
-                    {selectedItem?.sku} - {selectedItem?.name}
+              <div className="mt-2 rounded-md border border-blue-200 bg-blue-50 p-3 sm:p-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex-1">
+                    <div className="font-medium text-gray-900">
+                      {selectedItem?.sku} - {selectedItem?.name}
+                    </div>
+                    <div className="mt-1 text-sm text-gray-600">
+                      {selectedItem?.category} • {selectedItem?.brand}
+                    </div>
+                    <div className="mt-1 text-sm text-gray-600">
+                      Total available: {selectedItem?.totalQuantity} units
+                    </div>
                   </div>
-                  <div className="text-sm text-gray-600">
-                    {selectedItem?.category} • {selectedItem?.brand} • Total:{" "}
-                    {selectedItem?.totalQuantity} units
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setFormData({
+                        itemSku: "",
+                        sourceWarehouseId: 0,
+                        destinationWarehouseId: 0,
+                        quantity: 0,
+                        notes: "",
+                      })
+                    }
+                    className="rounded-md bg-white px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    Change Item
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setFormData({
-                      itemSku: "",
-                      sourceWarehouseId: 0,
-                      destinationWarehouseId: 0,
-                      quantity: 0,
-                      notes: "",
-                    })
-                  }
-                  className="text-sm text-blue-600 hover:text-blue-800"
-                >
-                  Change
-                </button>
               </div>
             )}
           </div>
 
-          {/* Step 2: Stock Locations Table */}
+          {/* Step 2: Stock Locations - Responsive Table/Cards */}
           {formData.itemSku && selectedItem && (
             <div>
               <label className="block text-sm font-medium text-gray-700">
@@ -301,7 +327,9 @@ export const StockTransferPage = () => {
               <p className="mt-1 text-sm text-gray-500">
                 Choose the warehouse to transfer from
               </p>
-              <div className="mt-2 overflow-x-auto rounded-md border border-gray-300">
+
+              {/* Desktop Table View - Hidden on mobile */}
+              <div className="mt-2 hidden overflow-x-auto rounded-md border border-gray-300 sm:block">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
@@ -363,6 +391,57 @@ export const StockTransferPage = () => {
                   </tbody>
                 </table>
               </div>
+
+              {/* Mobile Card View - Hidden on desktop */}
+              <div className="mt-2 space-y-3 sm:hidden">
+                {availableSourceWarehouses.map((location) => (
+                  <div
+                    key={location.warehouseId}
+                    className={`rounded-lg border p-4 ${
+                      formData.sourceWarehouseId === location.warehouseId
+                        ? "border-blue-500 bg-blue-50"
+                        : "border-gray-300 bg-white"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h4 className="font-medium text-gray-900">
+                          {location.warehouseName}
+                        </h4>
+                        <p className="mt-1 text-sm text-gray-600">
+                          Available:{" "}
+                          <span
+                            className={`font-medium ${
+                              location.quantity < 10
+                                ? "text-red-600"
+                                : location.quantity < 50
+                                  ? "text-yellow-600"
+                                  : "text-green-600"
+                            }`}
+                          >
+                            {location.quantity} units
+                          </span>
+                        </p>
+                      </div>
+                      {formData.sourceWarehouseId === location.warehouseId ? (
+                        <span className="flex items-center rounded-full bg-blue-600 px-3 py-1 text-sm font-medium text-white">
+                          ✓ Selected
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleSourceSelect(location.warehouseId)
+                          }
+                          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                        >
+                          Select
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
@@ -373,24 +452,30 @@ export const StockTransferPage = () => {
                 <label className="block text-sm font-medium text-gray-700">
                   Step 3: Select Destination Warehouse
                 </label>
-                <select
-                  required
-                  className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-3 text-base focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm"
-                  value={formData.destinationWarehouseId}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      destinationWarehouseId: parseInt(e.target.value),
-                    })
-                  }
-                >
-                  <option value="0">Select destination warehouse</option>
-                  {availableDestinationWarehouses.map((warehouse) => (
-                    <option key={warehouse.id} value={warehouse.id}>
-                      {warehouse.name} - {warehouse.location}
-                    </option>
-                  ))}
-                </select>
+                {isWarehousesRefetching ? (
+                  <div className="mt-1">
+                    <Skeleton variant="text" className="h-12" />
+                  </div>
+                ) : (
+                  <select
+                    required
+                    className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-3 text-base focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm"
+                    value={formData.destinationWarehouseId}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        destinationWarehouseId: parseInt(e.target.value),
+                      })
+                    }
+                  >
+                    <option value="0">Select destination warehouse</option>
+                    {availableDestinationWarehouses.map((warehouse) => (
+                      <option key={warehouse.id} value={warehouse.id}>
+                        {warehouse.name} - {warehouse.location}
+                      </option>
+                    ))}
+                  </select>
+                )}
               </div>
 
               <div>
@@ -417,6 +502,36 @@ export const StockTransferPage = () => {
                     Available: {maxAvailableQuantity} units at{" "}
                     {getWarehouseName(formData.sourceWarehouseId)}
                   </p>
+                  {isExpired && (
+                    <div className="mt-2 rounded-md bg-red-50 p-3">
+                      <div className="flex">
+                        <svg
+                          className="h-5 w-5 text-red-400"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        <div className="ml-3">
+                          <h3 className="text-sm font-medium text-red-800">
+                            Expired Item Warning
+                          </h3>
+                          <p className="mt-1 text-sm text-red-700">
+                            This item expired on{" "}
+                            {new Date(
+                              selectedItemDetails!.expirationDate!,
+                            ).toLocaleDateString()}
+                            . Consider disposing of expired inventory instead of
+                            transferring.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -464,11 +579,11 @@ export const StockTransferPage = () => {
           {/* Submit Button */}
           {formData.sourceWarehouseId > 0 &&
             formData.destinationWarehouseId > 0 && (
-              <div className="flex justify-end">
+              <div className="flex justify-end pt-2">
                 <button
                   type="submit"
                   disabled={transferMutation.isPending}
-                  className="w-full rounded-md bg-blue-600 px-6 py-3 text-sm font-medium text-white hover:bg-blue-700 disabled:bg-gray-400 sm:w-auto sm:py-2"
+                  className="w-full rounded-md bg-blue-600 px-6 py-3 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-400 sm:w-auto sm:py-2 sm:text-sm"
                 >
                   {transferMutation.isPending
                     ? "Processing..."
