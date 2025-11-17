@@ -82,7 +82,7 @@ public class ReportService {
 
         // CSV Data
         for (Warehouse warehouse : warehouses) {
-            writer.printf("%s,%s,%d,%d,%.2f,%d,%.2f,%s,%s%n",
+            writer.printf("%s,%s,%.2f,%.2f,%.2f,%.2f,%.2f,%s,%s%n",
                 escapeCsv(warehouse.getName()),
                 escapeCsv(warehouse.getLocation()),
                 warehouse.getMaxCapacity(),
@@ -230,7 +230,7 @@ public class ReportService {
             String status = warehouse.getIsActive() ? "Active" : "Inactive";
             String alertStatus = warehouse.isAlertTriggered() ? "ALERT" : "OK";
 
-            writer.printf("%s,%s,%d,%d,%d,%.2f,%s,%s%n",
+            writer.printf("%s,%s,%.2f,%.2f,%.2f,%.2f,%s,%s%n",
                 escapeCsv(warehouse.getName()),
                 escapeCsv(warehouse.getLocation()),
                 warehouse.getMaxCapacity(),
