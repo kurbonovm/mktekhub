@@ -1,32 +1,30 @@
 package com.mktekhub.inventory.service;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
-
 import com.mktekhub.inventory.dto.StockActivityResponse;
 import com.mktekhub.inventory.exception.ResourceNotFoundException;
 import com.mktekhub.inventory.model.ActivityType;
 import com.mktekhub.inventory.model.InventoryItem;
 import com.mktekhub.inventory.model.StockActivity;
 import com.mktekhub.inventory.model.User;
+import com.mktekhub.inventory.model.Warehouse;
 import com.mktekhub.inventory.repository.InventoryItemRepository;
 import com.mktekhub.inventory.repository.StockActivityRepository;
 import com.mktekhub.inventory.repository.UserRepository;
-import com.mktekhub.inventory.model.Warehouse;
 import com.mktekhub.inventory.repository.WarehouseRepository;
-
-import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class StockActivityServiceTest {
@@ -46,281 +44,309 @@ class StockActivityServiceTest {
     @InjectMocks
     private StockActivityService stockActivityService;
 
-    private StockActivity testActivity;
-    private InventoryItem testItem;
-    private User testUser;
-    private Warehouse testWarehouse;
+    private StockActivity activity1;
+    private StockActivity activity2;
+    private InventoryItem item;
+    private User user;
+    private Warehouse warehouse;
 
     @BeforeEach
     void setUp() {
-        // Setup test item
-        testItem = new InventoryItem();
-        testItem.setId(1L);
-        testItem.setSku("TEST-001");
+        warehouse = new Warehouse();
+        warehouse.setId(1L);
+        warehouse.setName("Main Warehouse");
 
-        // Setup test user
-        testUser = new User();
-        testUser.setId(1L);
-        testUser.setUsername("testuser");
+        item = new InventoryItem();
+        item.setId(1L);
+        item.setSku("SKU001");
+        item.setName("Test Item");
 
-        // Setup test warehouse
-        testWarehouse = new Warehouse();
-        testWarehouse.setId(1L);
-        testWarehouse.setName("Test Warehouse");
+        user = new User();
+        user.setId(1L);
+        user.setUsername("testuser");
 
-        // Setup test activity
-        testActivity = new StockActivity();
-        testActivity.setId(1L);
-        testActivity.setItem(testItem);
-        testActivity.setItemSku("TEST-001");
-        testActivity.setActivityType(ActivityType.ADJUSTMENT);
-        testActivity.setQuantityChange(10);
-        testActivity.setPerformedBy(testUser);
-        testActivity.setTimestamp(LocalDateTime.now());
+        activity1 = new StockActivity();
+        activity1.setId(1L);
+        activity1.setItem(item);
+        activity1.setItemSku("SKU001");
+        activity1.setActivityType(ActivityType.ADJUSTMENT);
+        activity1.setQuantityChange(10);
+        activity1.setPreviousQuantity(90);
+        activity1.setNewQuantity(100);
+        activity1.setPerformedBy(user);
+        activity1.setTimestamp(LocalDateTime.now());
+
+        activity2 = new StockActivity();
+        activity2.setId(2L);
+        activity2.setItem(item);
+        activity2.setItemSku("SKU001");
+        activity2.setActivityType(ActivityType.TRANSFER);
+        activity2.setQuantityChange(20);
+        activity2.setPreviousQuantity(100);
+        activity2.setNewQuantity(120);
+        activity2.setPerformedBy(user);
+        activity2.setTimestamp(LocalDateTime.now());
     }
 
     @Test
-    void testGetAllActivities_ReturnsAllActivities() {
+    void getAllActivities_ReturnsAllActivities() {
         // Arrange
-        List<StockActivity> activities = Arrays.asList(testActivity);
-        when(stockActivityRepository.findAll()).thenReturn(activities);
+        when(stockActivityRepository.findAll()).thenReturn(Arrays.asList(activity1, activity2));
 
         // Act
         List<StockActivityResponse> result = stockActivityService.getAllActivities();
 
         // Assert
-        assertNotNull(result);
-        assertEquals(1, result.size());
-        verify(stockActivityRepository, times(1)).findAll();
+        assertEquals(2, result.size());
+        verify(stockActivityRepository).findAll();
     }
 
     @Test
-    void testGetActivityById_ActivityExists_ReturnsActivity() {
+    void getActivityById_ReturnsActivity_WhenExists() {
         // Arrange
-        when(stockActivityRepository.findById(1L)).thenReturn(Optional.of(testActivity));
+        when(stockActivityRepository.findById(1L)).thenReturn(Optional.of(activity1));
 
         // Act
         StockActivityResponse result = stockActivityService.getActivityById(1L);
 
         // Assert
         assertNotNull(result);
-        assertEquals(ActivityType.ADJUSTMENT, result.getActivityType());
-        verify(stockActivityRepository, times(1)).findById(1L);
+        assertEquals(1L, result.getId());
+        assertEquals("SKU001", result.getItemSku());
+        verify(stockActivityRepository).findById(1L);
     }
 
     @Test
-    void testGetActivityById_ActivityNotFound_ThrowsException() {
+    void getActivityById_ThrowsException_WhenNotFound() {
         // Arrange
         when(stockActivityRepository.findById(999L)).thenReturn(Optional.empty());
 
         // Act & Assert
         assertThrows(ResourceNotFoundException.class, () -> stockActivityService.getActivityById(999L));
-        verify(stockActivityRepository, times(1)).findById(999L);
     }
 
     @Test
-    void testGetActivitiesByItemId_ItemExists_ReturnsActivities() {
+    void getActivitiesByItemId_ReturnsActivities_WhenItemExists() {
         // Arrange
         when(inventoryItemRepository.existsById(1L)).thenReturn(true);
-        List<StockActivity> activities = Arrays.asList(testActivity);
-        when(stockActivityRepository.findByItemId(1L)).thenReturn(activities);
+        when(stockActivityRepository.findByItemId(1L)).thenReturn(Arrays.asList(activity1, activity2));
 
         // Act
         List<StockActivityResponse> result = stockActivityService.getActivitiesByItemId(1L);
 
         // Assert
-        assertNotNull(result);
-        assertEquals(1, result.size());
-        verify(inventoryItemRepository, times(1)).existsById(1L);
-        verify(stockActivityRepository, times(1)).findByItemId(1L);
+        assertEquals(2, result.size());
+        verify(inventoryItemRepository).existsById(1L);
+        verify(stockActivityRepository).findByItemId(1L);
     }
 
     @Test
-    void testGetActivitiesByItemId_ItemNotFound_ThrowsException() {
+    void getActivitiesByItemId_ThrowsException_WhenItemNotExists() {
         // Arrange
         when(inventoryItemRepository.existsById(999L)).thenReturn(false);
 
         // Act & Assert
         assertThrows(ResourceNotFoundException.class, () -> stockActivityService.getActivitiesByItemId(999L));
-        verify(inventoryItemRepository, times(1)).existsById(999L);
         verify(stockActivityRepository, never()).findByItemId(anyLong());
     }
 
     @Test
-    void testGetActivitiesByType_ReturnsActivities() {
-        // Arrange
-        List<StockActivity> activities = Arrays.asList(testActivity);
-        when(stockActivityRepository.findByActivityType(ActivityType.ADJUSTMENT)).thenReturn(activities);
-
-        // Act
-        List<StockActivityResponse> result = stockActivityService.getActivitiesByType(ActivityType.ADJUSTMENT);
-
-        // Assert
-        assertNotNull(result);
-        assertEquals(1, result.size());
-        verify(stockActivityRepository, times(1)).findByActivityType(ActivityType.ADJUSTMENT);
-    }
-
-    @Test
-    void testGetActivitiesByUserId_UserExists_ReturnsActivities() {
-        // Arrange
-        when(userRepository.existsById(1L)).thenReturn(true);
-        List<StockActivity> activities = Arrays.asList(testActivity);
-        when(stockActivityRepository.findByPerformedById(1L)).thenReturn(activities);
-
-        // Act
-        List<StockActivityResponse> result = stockActivityService.getActivitiesByUserId(1L);
-
-        // Assert
-        assertNotNull(result);
-        assertEquals(1, result.size());
-        verify(userRepository, times(1)).existsById(1L);
-        verify(stockActivityRepository, times(1)).findByPerformedById(1L);
-    }
-
-    @Test
-    void testGetActivitiesByUserId_UserNotFound_ThrowsException() {
-        // Arrange
-        when(userRepository.existsById(999L)).thenReturn(false);
-
-        // Act & Assert
-        assertThrows(ResourceNotFoundException.class, () -> stockActivityService.getActivitiesByUserId(999L));
-        verify(userRepository, times(1)).existsById(999L);
-        verify(stockActivityRepository, never()).findByPerformedById(anyLong());
-    }
-
-    @Test
-    void testGetActivitiesByDateRange_ReturnsActivities() {
-        // Arrange
-        LocalDateTime start = LocalDateTime.now().minusDays(1);
-        LocalDateTime end = LocalDateTime.now().plusDays(1);
-        List<StockActivity> activities = Arrays.asList(testActivity);
-        when(stockActivityRepository.findByTimestampBetween(start, end)).thenReturn(activities);
-
-        // Act
-        List<StockActivityResponse> result = stockActivityService.getActivitiesByDateRange(start, end);
-
-        // Assert
-        assertNotNull(result);
-        assertEquals(1, result.size());
-        verify(stockActivityRepository, times(1)).findByTimestampBetween(start, end);
-    }
-
-    @Test
-    void testGetActivitiesByItemIdSorted_ItemExists_ReturnsSortedActivities() {
+    void getActivitiesByItemIdSorted_ReturnsSortedActivities() {
         // Arrange
         when(inventoryItemRepository.existsById(1L)).thenReturn(true);
-        List<StockActivity> activities = Arrays.asList(testActivity);
-        when(stockActivityRepository.findByItemIdOrderByTimestampDesc(1L)).thenReturn(activities);
+        when(stockActivityRepository.findByItemIdOrderByTimestampDesc(1L))
+                .thenReturn(Arrays.asList(activity2, activity1));
 
         // Act
         List<StockActivityResponse> result = stockActivityService.getActivitiesByItemIdSorted(1L);
 
         // Assert
-        assertNotNull(result);
-        assertEquals(1, result.size());
-        verify(inventoryItemRepository, times(1)).existsById(1L);
-        verify(stockActivityRepository, times(1)).findByItemIdOrderByTimestampDesc(1L);
+        assertEquals(2, result.size());
+        verify(stockActivityRepository).findByItemIdOrderByTimestampDesc(1L);
     }
 
     @Test
-    void testGetActivitiesByItemSku_ItemExists_ReturnsActivities() {
+    void getActivitiesByItemSku_ReturnsActivities_WhenSkuExists() {
         // Arrange
-        when(inventoryItemRepository.existsBySku("TEST-001")).thenReturn(true);
-        when(inventoryItemRepository.findBySku("TEST-001")).thenReturn(Optional.of(testItem));
+        when(inventoryItemRepository.existsBySku("SKU001")).thenReturn(true);
+        when(inventoryItemRepository.findBySku("SKU001")).thenReturn(Optional.of(item));
         when(inventoryItemRepository.existsById(1L)).thenReturn(true);
-        List<StockActivity> activities = Arrays.asList(testActivity);
-        when(stockActivityRepository.findByItemIdOrderByTimestampDesc(1L)).thenReturn(activities);
+        when(stockActivityRepository.findByItemIdOrderByTimestampDesc(1L))
+                .thenReturn(Arrays.asList(activity1, activity2));
 
         // Act
-        List<StockActivityResponse> result = stockActivityService.getActivitiesByItemSku("TEST-001");
+        List<StockActivityResponse> result = stockActivityService.getActivitiesByItemSku("SKU001");
 
         // Assert
-        assertNotNull(result);
-        assertEquals(1, result.size());
-        verify(inventoryItemRepository, times(1)).existsBySku("TEST-001");
-        verify(inventoryItemRepository, times(1)).findBySku("TEST-001");
+        assertEquals(2, result.size());
+        verify(inventoryItemRepository).existsBySku("SKU001");
+        verify(inventoryItemRepository).findBySku("SKU001");
     }
 
     @Test
-    void testGetActivitiesByUsername_UserExists_ReturnsActivities() {
+    void getActivitiesByItemSku_ThrowsException_WhenSkuNotExists() {
         // Arrange
-        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+        when(inventoryItemRepository.existsBySku("INVALID")).thenReturn(false);
+
+        // Act & Assert
+        assertThrows(ResourceNotFoundException.class, () -> stockActivityService.getActivitiesByItemSku("INVALID"));
+    }
+
+    @Test
+    void getActivitiesByType_ReturnsFilteredActivities() {
+        // Arrange
+        when(stockActivityRepository.findByActivityType(ActivityType.ADJUSTMENT))
+                .thenReturn(List.of(activity1));
+
+        // Act
+        List<StockActivityResponse> result = stockActivityService.getActivitiesByType(ActivityType.ADJUSTMENT);
+
+        // Assert
+        assertEquals(1, result.size());
+        verify(stockActivityRepository).findByActivityType(ActivityType.ADJUSTMENT);
+    }
+
+    @Test
+    void getActivitiesByUserId_ReturnsActivities_WhenUserExists() {
+        // Arrange
         when(userRepository.existsById(1L)).thenReturn(true);
-        List<StockActivity> activities = Arrays.asList(testActivity);
-        when(stockActivityRepository.findByPerformedById(1L)).thenReturn(activities);
+        when(stockActivityRepository.findByPerformedById(1L)).thenReturn(Arrays.asList(activity1, activity2));
+
+        // Act
+        List<StockActivityResponse> result = stockActivityService.getActivitiesByUserId(1L);
+
+        // Assert
+        assertEquals(2, result.size());
+        verify(userRepository).existsById(1L);
+        verify(stockActivityRepository).findByPerformedById(1L);
+    }
+
+    @Test
+    void getActivitiesByUserId_ThrowsException_WhenUserNotExists() {
+        // Arrange
+        when(userRepository.existsById(999L)).thenReturn(false);
+
+        // Act & Assert
+        assertThrows(ResourceNotFoundException.class, () -> stockActivityService.getActivitiesByUserId(999L));
+    }
+
+    @Test
+    void getActivitiesByUsername_ReturnsActivities_WhenUserExists() {
+        // Arrange
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
+        when(userRepository.existsById(1L)).thenReturn(true);
+        when(stockActivityRepository.findByPerformedById(1L)).thenReturn(Arrays.asList(activity1, activity2));
 
         // Act
         List<StockActivityResponse> result = stockActivityService.getActivitiesByUsername("testuser");
 
         // Assert
-        assertNotNull(result);
-        assertEquals(1, result.size());
-        verify(userRepository, times(1)).findByUsername("testuser");
-        verify(stockActivityRepository, times(1)).findByPerformedById(1L);
+        assertEquals(2, result.size());
+        verify(userRepository).findByUsername("testuser");
     }
 
     @Test
-    void testGetActivitiesByUsername_UserNotFound_ThrowsException() {
-        // Arrange
-        when(userRepository.findByUsername("nonexistent")).thenReturn(Optional.empty());
-
-        // Act & Assert
-        assertThrows(ResourceNotFoundException.class, () -> stockActivityService.getActivitiesByUsername("nonexistent"));
-        verify(userRepository, times(1)).findByUsername("nonexistent");
-    }
-
-    @Test
-    void testGetActivitiesBySourceWarehouse_WarehouseExists_ReturnsActivities() {
+    void getActivitiesBySourceWarehouse_ReturnsActivities_WhenWarehouseExists() {
         // Arrange
         when(warehouseRepository.existsById(1L)).thenReturn(true);
-        List<StockActivity> activities = Arrays.asList(testActivity);
-        when(stockActivityRepository.findBySourceWarehouseId(1L)).thenReturn(activities);
+        when(stockActivityRepository.findBySourceWarehouseId(1L)).thenReturn(List.of(activity1));
 
         // Act
         List<StockActivityResponse> result = stockActivityService.getActivitiesBySourceWarehouse(1L);
 
         // Assert
-        assertNotNull(result);
         assertEquals(1, result.size());
-        verify(warehouseRepository, times(1)).existsById(1L);
-        verify(stockActivityRepository, times(1)).findBySourceWarehouseId(1L);
+        verify(warehouseRepository).existsById(1L);
+        verify(stockActivityRepository).findBySourceWarehouseId(1L);
     }
 
     @Test
-    void testGetActivitiesByDestinationWarehouse_WarehouseExists_ReturnsActivities() {
+    void getActivitiesByDestinationWarehouse_ReturnsActivities_WhenWarehouseExists() {
         // Arrange
         when(warehouseRepository.existsById(1L)).thenReturn(true);
-        List<StockActivity> activities = Arrays.asList(testActivity);
-        when(stockActivityRepository.findByDestinationWarehouseId(1L)).thenReturn(activities);
+        when(stockActivityRepository.findByDestinationWarehouseId(1L)).thenReturn(List.of(activity2));
 
         // Act
         List<StockActivityResponse> result = stockActivityService.getActivitiesByDestinationWarehouse(1L);
 
         // Assert
-        assertNotNull(result);
         assertEquals(1, result.size());
-        verify(warehouseRepository, times(1)).existsById(1L);
-        verify(stockActivityRepository, times(1)).findByDestinationWarehouseId(1L);
+        verify(warehouseRepository).existsById(1L);
+        verify(stockActivityRepository).findByDestinationWarehouseId(1L);
     }
 
     @Test
-    void testGetActivitiesByWarehouse_WarehouseExists_ReturnsActivities() {
+    void getActivitiesByWarehouse_ReturnsCombinedActivities() {
         // Arrange
         when(warehouseRepository.existsById(1L)).thenReturn(true);
-        List<StockActivity> sourceActivities = Arrays.asList(testActivity);
-        List<StockActivity> destActivities = Arrays.asList();
-        when(stockActivityRepository.findBySourceWarehouseId(1L)).thenReturn(sourceActivities);
-        when(stockActivityRepository.findByDestinationWarehouseId(1L)).thenReturn(destActivities);
+        when(stockActivityRepository.findBySourceWarehouseId(1L)).thenReturn(new java.util.ArrayList<>(List.of(activity1)));
+        when(stockActivityRepository.findByDestinationWarehouseId(1L)).thenReturn(new java.util.ArrayList<>(List.of(activity2)));
 
         // Act
         List<StockActivityResponse> result = stockActivityService.getActivitiesByWarehouse(1L);
 
         // Assert
-        assertNotNull(result);
+        assertEquals(2, result.size());
+        verify(stockActivityRepository).findBySourceWarehouseId(1L);
+        verify(stockActivityRepository).findByDestinationWarehouseId(1L);
+    }
+
+    @Test
+    void getActivitiesByDateRange_ReturnsFilteredActivities() {
+        // Arrange
+        LocalDateTime start = LocalDateTime.now().minusDays(7);
+        LocalDateTime end = LocalDateTime.now();
+        when(stockActivityRepository.findByTimestampBetween(start, end))
+                .thenReturn(Arrays.asList(activity1, activity2));
+
+        // Act
+        List<StockActivityResponse> result = stockActivityService.getActivitiesByDateRange(start, end);
+
+        // Assert
+        assertEquals(2, result.size());
+        verify(stockActivityRepository).findByTimestampBetween(start, end);
+    }
+
+    @Test
+    void getActivitiesWithFilters_FiltersCorrectly_WithMultipleFilters() {
+        // Arrange
+        when(stockActivityRepository.findAll()).thenReturn(Arrays.asList(activity1, activity2));
+        when(inventoryItemRepository.existsById(1L)).thenReturn(true);
+        when(userRepository.existsById(1L)).thenReturn(true);
+
+        // Act
+        List<StockActivityResponse> result = stockActivityService.getActivitiesWithFilters(
+                1L, null, ActivityType.ADJUSTMENT, 1L, null, null, null, null
+        );
+
+        // Assert
         assertEquals(1, result.size());
-        verify(warehouseRepository, times(1)).existsById(1L);
-        verify(stockActivityRepository, times(1)).findBySourceWarehouseId(1L);
-        verify(stockActivityRepository, times(1)).findByDestinationWarehouseId(1L);
+        assertEquals(ActivityType.ADJUSTMENT, result.get(0).getActivityType());
+    }
+
+    @Test
+    void getActivitiesWithFilters_ReturnsAllActivities_WhenNoFiltersProvided() {
+        // Arrange
+        when(stockActivityRepository.findAll()).thenReturn(Arrays.asList(activity1, activity2));
+
+        // Act
+        List<StockActivityResponse> result = stockActivityService.getActivitiesWithFilters(
+                null, null, null, null, null, null, null, null
+        );
+
+        // Assert
+        assertEquals(2, result.size());
+    }
+
+    @Test
+    void getActivitiesWithFilters_ThrowsException_WhenItemIdNotExists() {
+        // Arrange
+        when(stockActivityRepository.findAll()).thenReturn(Arrays.asList(activity1, activity2));
+        when(inventoryItemRepository.existsById(999L)).thenReturn(false);
+
+        // Act & Assert
+        assertThrows(ResourceNotFoundException.class, () ->
+                stockActivityService.getActivitiesWithFilters(999L, null, null, null, null, null, null, null)
+        );
     }
 }

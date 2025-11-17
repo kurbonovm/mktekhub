@@ -15,3 +15,15 @@ spring:
   sql:
     init:
       mode: never
+
+# JWT Configuration for Tests
+jwt:
+  secret: test-secret-key-for-testing-purposes-only-must-be-at-least-256-bits
+  expiration: 86400000
+
+# Logging
+logging:
+  level:
+    org.springframework: WARN
+    com.mktekhub: DEBUG
+    org.hibernate.SQL: DEBUG
