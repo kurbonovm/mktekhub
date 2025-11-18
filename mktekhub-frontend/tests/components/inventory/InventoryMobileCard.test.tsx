@@ -10,12 +10,12 @@ import {
 
 // Mock the common components
 vi.mock("@/components/common", () => ({
-  ExpirationBadge: ({ expirationDate }: any) => (
+  ExpirationBadge: ({ expirationDate }: { expirationDate?: string }) => (
     <div data-testid="expiration-badge">
       {expirationDate || "No expiration"}
     </div>
   ),
-  WarrantyBadge: ({ warrantyEndDate }: any) => (
+  WarrantyBadge: ({ warrantyEndDate }: { warrantyEndDate?: string }) => (
     <div data-testid="warranty-badge">{warrantyEndDate || "No warranty"}</div>
   ),
 }));

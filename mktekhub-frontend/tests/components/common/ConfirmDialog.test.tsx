@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
@@ -86,7 +86,7 @@ describe("ConfirmDialog", () => {
 
   describe("Variants", () => {
     it("should render danger variant by default", () => {
-      const { container } = render(<ConfirmDialog {...defaultProps} />);
+      render(<ConfirmDialog {...defaultProps} />);
 
       const confirmButton = screen.getByRole("button", { name: "Confirm" });
       expect(confirmButton.className).toContain("bg-red-600");

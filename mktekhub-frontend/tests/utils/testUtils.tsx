@@ -6,10 +6,11 @@ import { ToastProvider } from "@/contexts/ToastContext";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { vi } from "vitest";
 import type { Mock } from "vitest";
+import type { AuthResponse } from "@/types";
 
 // Mock AuthContext value
 export interface MockAuthContextValue {
-  user: any;
+  user: AuthResponse | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: Mock;
@@ -32,13 +33,12 @@ export const mockAuthContext: MockAuthContextValue = {
 // Create a custom render function that includes providers
 interface AllTheProvidersProps {
   children: ReactNode;
-  authValue?: Partial<MockAuthContextValue>;
   initialRoute?: string;
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 function AllTheProviders({
   children,
-  authValue = {},
   initialRoute = "/",
 }: AllTheProvidersProps) {
   // Create a new QueryClient for each test to ensure isolation
@@ -62,7 +62,6 @@ function AllTheProviders({
 }
 
 interface CustomRenderOptions extends Omit<RenderOptions, "wrapper"> {
-  authValue?: Partial<MockAuthContextValue>;
   initialRoute?: string;
 }
 
@@ -71,17 +70,16 @@ export const renderWithProviders = (
   ui: ReactElement,
   options?: CustomRenderOptions,
 ) => {
-  const { authValue, initialRoute, ...renderOptions } = options || {};
+  const { initialRoute, ...renderOptions } = options || {};
 
   const Wrapper = ({ children }: { children: ReactNode }) => (
-    <AllTheProviders authValue={authValue} initialRoute={initialRoute}>
-      {children}
-    </AllTheProviders>
+    <AllTheProviders initialRoute={initialRoute}>{children}</AllTheProviders>
   );
 
   return render(ui, { wrapper: Wrapper, ...renderOptions });
 };
 
 // Re-export everything from @testing-library/react
+// eslint-disable-next-line react-refresh/only-export-components
 export * from "@testing-library/react";
 export { renderWithProviders as render };

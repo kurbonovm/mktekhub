@@ -24,13 +24,20 @@ Object.defineProperty(window, "localStorage", {
 });
 
 // Mock window.location
-delete (window as any).location;
-window.location = {
+interface MockLocation {
+  href: string;
+  pathname: string;
+  search: string;
+  hash: string;
+}
+
+delete (window as unknown as { location: unknown }).location;
+(window as unknown as { location: MockLocation }).location = {
   href: "",
   pathname: "",
   search: "",
   hash: "",
-} as any;
+};
 
 // Clear all mocks before each test
 beforeEach(() => {

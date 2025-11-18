@@ -1,9 +1,9 @@
 import {
   InventoryItem,
   Warehouse,
-  User,
   StockActivity,
   DashboardSummary,
+  AuthResponse,
 } from "@/types";
 
 // Mock Users (using AuthResponse type which has all fields needed by Navbar)
@@ -209,7 +209,9 @@ export const createMockWarehouse = (
   ...overrides,
 });
 
-export const createMockUser = (overrides?: any): any => ({
+export const createMockUser = (
+  overrides?: Partial<AuthResponse>,
+): AuthResponse => ({
   id: 999,
   username: "testuser",
   email: "test@example.com",

@@ -1,8 +1,7 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { screen } from "@testing-library/react";
 import { renderWithProviders } from "../../utils/testUtils";
 import { ProtectedRoute } from "@/components/common/ProtectedRoute";
-import * as AuthContext from "@/contexts/AuthContext";
 
 // Mock the useAuth hook
 const mockUseAuth = vi.fn();
@@ -95,8 +94,6 @@ describe("ProtectedRoute", () => {
     });
 
     it("should not redirect when authenticated", () => {
-      const initialPath = window.location.pathname;
-
       mockUseAuth.mockReturnValue({
         isAuthenticated: true,
         isLoading: false,
@@ -216,7 +213,7 @@ describe("ProtectedRoute", () => {
         hasRole: vi.fn(() => false),
       });
 
-      const { container } = renderWithProviders(
+      renderWithProviders(
         <ProtectedRoute requiredRole="ADMIN">
           <ProtectedContent />
         </ProtectedRoute>,

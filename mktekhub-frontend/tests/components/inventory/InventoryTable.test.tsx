@@ -7,17 +7,21 @@ import { mockInventoryItems } from "../../utils/mockData";
 
 // Mock the common components
 vi.mock("@/components/common", () => ({
-  ExpirationBadge: ({ expirationDate }: any) => (
+  ExpirationBadge: ({ expirationDate }: { expirationDate?: string }) => (
     <div data-testid="expiration-badge">
       {expirationDate || "No expiration"}
     </div>
   ),
-  WarrantyBadge: ({ warrantyEndDate }: any) => (
+  WarrantyBadge: ({ warrantyEndDate }: { warrantyEndDate?: string }) => (
     <div data-testid="warranty-badge">{warrantyEndDate || "No warranty"}</div>
   ),
-  Tooltip: ({ content, children }: any) => (
-    <div title={content}>{children}</div>
-  ),
+  Tooltip: ({
+    content,
+    children,
+  }: {
+    content: string;
+    children: React.ReactNode;
+  }) => <div title={content}>{children}</div>,
 }));
 
 describe("InventoryTable", () => {
