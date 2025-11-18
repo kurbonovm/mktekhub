@@ -49,6 +49,8 @@ const ToastItem: React.FC<{ toast: ToastType }> = ({ toast }) => {
             className="h-5 w-5 text-green-400"
             fill="currentColor"
             viewBox="0 0 20 20"
+            role="img"
+            aria-hidden="true"
           >
             <path
               fillRule="evenodd"
@@ -63,6 +65,8 @@ const ToastItem: React.FC<{ toast: ToastType }> = ({ toast }) => {
             className="h-5 w-5 text-red-400"
             fill="currentColor"
             viewBox="0 0 20 20"
+            role="img"
+            aria-hidden="true"
           >
             <path
               fillRule="evenodd"
@@ -77,6 +81,8 @@ const ToastItem: React.FC<{ toast: ToastType }> = ({ toast }) => {
             className="h-5 w-5 text-yellow-400"
             fill="currentColor"
             viewBox="0 0 20 20"
+            role="img"
+            aria-hidden="true"
           >
             <path
               fillRule="evenodd"
@@ -91,6 +97,8 @@ const ToastItem: React.FC<{ toast: ToastType }> = ({ toast }) => {
             className="h-5 w-5 text-blue-400"
             fill="currentColor"
             viewBox="0 0 20 20"
+            role="img"
+            aria-hidden="true"
           >
             <path
               fillRule="evenodd"

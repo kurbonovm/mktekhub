@@ -1,18 +1,21 @@
-import { render, RenderOptions } from '@testing-library/react';
-import { ReactElement, ReactNode } from 'react';
-import { MemoryRouter } from 'react-router-dom';
-import { AuthProvider } from '@/contexts/AuthContext';
-import { ToastProvider } from '@/contexts/ToastContext';
+import { render, RenderOptions } from "@testing-library/react";
+import { ReactElement, ReactNode } from "react";
+import { MemoryRouter } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { ToastProvider } from "@/contexts/ToastContext";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { vi } from "vitest";
+import type { Mock } from "vitest";
 
 // Mock AuthContext value
 export interface MockAuthContextValue {
   user: any;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: jest.Mock;
-  signup: jest.Mock;
-  logout: jest.Mock;
-  hasRole: jest.Mock;
+  login: Mock;
+  signup: Mock;
+  logout: Mock;
+  hasRole: Mock;
 }
 
 // Default mock auth context
@@ -36,20 +39,29 @@ interface AllTheProvidersProps {
 function AllTheProviders({
   children,
   authValue = {},
-  initialRoute = '/'
+  initialRoute = "/",
 }: AllTheProvidersProps) {
+  // Create a new QueryClient for each test to ensure isolation
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false, // Disable retries in tests
+      },
+    },
+  });
+
   return (
-    <MemoryRouter initialEntries={[initialRoute]}>
-      <AuthProvider>
-        <ToastProvider>
-          {children}
-        </ToastProvider>
-      </AuthProvider>
-    </MemoryRouter>
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter initialEntries={[initialRoute]}>
+        <AuthProvider>
+          <ToastProvider>{children}</ToastProvider>
+        </AuthProvider>
+      </MemoryRouter>
+    </QueryClientProvider>
   );
 }
 
-interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
+interface CustomRenderOptions extends Omit<RenderOptions, "wrapper"> {
   authValue?: Partial<MockAuthContextValue>;
   initialRoute?: string;
 }
@@ -57,7 +69,7 @@ interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
 // Custom render with providers
 export const renderWithProviders = (
   ui: ReactElement,
-  options?: CustomRenderOptions
+  options?: CustomRenderOptions,
 ) => {
   const { authValue, initialRoute, ...renderOptions } = options || {};
 
@@ -71,5 +83,5 @@ export const renderWithProviders = (
 };
 
 // Re-export everything from @testing-library/react
-export * from '@testing-library/react';
+export * from "@testing-library/react";
 export { renderWithProviders as render };

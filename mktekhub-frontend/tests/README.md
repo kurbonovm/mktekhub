@@ -20,21 +20,25 @@ tests/
 ## Running Tests
 
 ### Run all tests
+
 ```bash
 npm test
 ```
 
 ### Run tests with UI
+
 ```bash
 npm run test:ui
 ```
 
 ### Run tests with coverage
+
 ```bash
 npm run test:coverage
 ```
 
 ### Run tests in watch mode
+
 ```bash
 npm test
 ```
@@ -42,6 +46,7 @@ npm test
 ## Test Coverage
 
 All service functions are tested including:
+
 - Happy path scenarios
 - Error handling (404, 500, network errors)
 - Edge cases (empty data, special characters, validation errors)
@@ -60,6 +65,7 @@ All service functions are tested including:
 ## Test Organization
 
 Tests are organized in a separate `tests/` directory at the project root, mirroring the source structure. This approach provides:
+
 - Clear separation between source code and tests
 - Easy navigation and organization
 - Centralized test configuration
@@ -67,6 +73,7 @@ Tests are organized in a separate `tests/` directory at the project root, mirror
 ## Writing New Tests
 
 When adding new tests:
+
 1. Place test files in the appropriate subdirectory under `tests/`
 2. Name test files with the pattern `*.test.ts` or `*.test.tsx`
 3. Import from source using relative paths: `../../src/...`

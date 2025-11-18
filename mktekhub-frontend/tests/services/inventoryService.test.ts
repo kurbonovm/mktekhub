@@ -284,9 +284,7 @@ describe("inventoryService", () => {
         message: "SKU already exists",
       });
 
-      await expect(
-        inventoryService.create(duplicateRequest),
-      ).rejects.toThrow();
+      await expect(inventoryService.create(duplicateRequest)).rejects.toThrow();
     });
   });
 
@@ -385,9 +383,7 @@ describe("inventoryService", () => {
     it("should handle not found error", async () => {
       mock.onPatch("/inventory/999/adjust").reply(404);
 
-      await expect(
-        inventoryService.adjustQuantity(999, 10),
-      ).rejects.toThrow();
+      await expect(inventoryService.adjustQuantity(999, 10)).rejects.toThrow();
     });
   });
 });

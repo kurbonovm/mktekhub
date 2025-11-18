@@ -7,6 +7,7 @@ This directory contains comprehensive unit tests for all React components in the
 ### ✅ Completed Component Tests (175 tests)
 
 #### Common Components
+
 - **SearchBar** (17 tests) - Text search input with clear functionality
 - **ConfirmDialog** (27 tests) - Modal confirmation dialogs with variants
 - **ExpirationBadge** (33 tests) - Expiration status badges for inventory items
@@ -50,6 +51,7 @@ renderWithProviders(<MyComponent />, {
 ```
 
 **Features:**
+
 - Wraps components with `MemoryRouter` for routing tests
 - Includes `AuthProvider` for authentication context
 - Includes `ToastProvider` for toast notifications
@@ -59,6 +61,7 @@ renderWithProviders(<MyComponent />, {
 ### Mock Data
 
 The `mockData.ts` file provides:
+
 - Mock users (admin, manager, employee)
 - Mock warehouses
 - Mock inventory items
@@ -67,17 +70,21 @@ The `mockData.ts` file provides:
 - Helper functions to create custom mock data
 
 ```typescript
-import { mockInventoryItems, createMockInventoryItem } from '../../utils/mockData';
+import {
+  mockInventoryItems,
+  createMockInventoryItem,
+} from "../../utils/mockData";
 
 const customItem = createMockInventoryItem({
-  name: 'Custom Item',
-  quantity: 50
+  name: "Custom Item",
+  quantity: 50,
 });
 ```
 
 ## Test Patterns
 
 ### 1. Basic Rendering Tests
+
 ```typescript
 it('should render component with props', () => {
   render(<SearchBar value="test" onChange={mockFn} />);
@@ -86,6 +93,7 @@ it('should render component with props', () => {
 ```
 
 ### 2. User Interaction Tests
+
 ```typescript
 it('should call handler on user action', async () => {
   const user = userEvent.setup();
@@ -99,6 +107,7 @@ it('should call handler on user action', async () => {
 ```
 
 ### 3. Conditional Rendering Tests
+
 ```typescript
 it('should show element when condition is true', () => {
   render(<Component showElement={true} />);
@@ -112,6 +121,7 @@ it('should hide element when condition is false', () => {
 ```
 
 ### 4. Variant/Style Tests
+
 ```typescript
 it('should apply danger variant styling', () => {
   render(<Button variant="danger">Delete</Button>);
@@ -122,6 +132,7 @@ it('should apply danger variant styling', () => {
 ```
 
 ### 5. Accessibility Tests
+
 ```typescript
 it('should have proper ARIA attributes', () => {
   render(<Dialog isOpen={true} title="Confirm" />);
@@ -132,6 +143,7 @@ it('should have proper ARIA attributes', () => {
 ```
 
 ### 6. Context/Provider Tests
+
 ```typescript
 it('should use authentication context', () => {
   mockUseAuth.mockReturnValue({
@@ -147,26 +159,31 @@ it('should use authentication context', () => {
 ## Running Tests
 
 ### Run all component tests:
+
 ```bash
 npm test -- tests/components
 ```
 
 ### Run specific component test file:
+
 ```bash
 npm test -- tests/components/common/SearchBar.test.tsx
 ```
 
 ### Run tests in watch mode:
+
 ```bash
 npm test -- --watch tests/components
 ```
 
 ### Run tests with UI:
+
 ```bash
 npm run test:ui
 ```
 
 ### Generate coverage report:
+
 ```bash
 npm run test:coverage
 ```
@@ -174,6 +191,7 @@ npm run test:coverage
 ## Component Test Details
 
 ### SearchBar Component (17 tests)
+
 - ✅ Renders with default and custom placeholders
 - ✅ Displays current value
 - ✅ Shows/hides clear button based on value
@@ -183,6 +201,7 @@ npm run test:coverage
 - ✅ Proper accessibility attributes
 
 ### ConfirmDialog Component (27 tests)
+
 - ✅ Shows/hides based on isOpen prop
 - ✅ Displays custom title and message
 - ✅ Renders with danger, primary, warning variants
@@ -192,6 +211,7 @@ npm run test:coverage
 - ✅ Proper modal structure and z-index
 
 ### ExpirationBadge Component (33 tests)
+
 - ✅ Shows "No expiration" when no date provided
 - ✅ Displays "Expired" for past dates
 - ✅ Shows "Expiring soon" within warning threshold
@@ -201,12 +221,14 @@ npm run test:coverage
 - ✅ Proper color coding (red/yellow/gray)
 
 ### WarrantyBadge Component (included in ExpirationBadge tests)
+
 - ✅ Shows "No warranty" when no date provided
 - ✅ Displays expired status
 - ✅ Shows warning for warranties expiring within 60 days
 - ✅ Proper styling and icons
 
 ### Breadcrumb Component (23 tests)
+
 - ✅ Renders manual breadcrumb items
 - ✅ Auto-generates breadcrumbs from URL
 - ✅ Creates clickable links for intermediate items
@@ -216,6 +238,7 @@ npm run test:coverage
 - ✅ Proper ARIA labels and semantic HTML
 
 ### Tooltip Component (23 tests)
+
 - ✅ Shows on hover, hides on unhover
 - ✅ Supports top, bottom, left, right positions
 - ✅ Displays custom content
@@ -225,6 +248,7 @@ npm run test:coverage
 - ✅ Proper z-index and styling
 
 ### Skeleton Component (36 tests)
+
 - ✅ Renders text, card, table, circle variants
 - ✅ Supports count prop for multiple skeletons
 - ✅ Applies custom className
@@ -234,6 +258,7 @@ npm run test:coverage
 - ✅ Varied skeleton sizes within cards
 
 ### ProtectedRoute Component (16 tests)
+
 - ✅ Shows loading indicator when loading
 - ✅ Redirects to login when not authenticated
 - ✅ Renders children when authenticated
@@ -245,26 +270,31 @@ npm run test:coverage
 ## Best Practices
 
 ### 1. Test Organization
+
 - Group related tests using `describe` blocks
 - Use descriptive test names starting with "should"
 - Organize by feature/behavior, not implementation
 
 ### 2. Test Independence
+
 - Each test should be independent
 - Use `beforeEach` and `afterEach` for setup/cleanup
 - Clear mocks between tests
 
 ### 3. User-Centric Testing
+
 - Use Testing Library queries that match user behavior
 - Prefer `getByRole`, `getByLabelText` over `getByTestId`
 - Test what users see and do, not implementation details
 
 ### 4. Async Testing
+
 - Use `userEvent` for realistic user interactions
 - Always `await` async operations
 - Use `screen.findBy*` for elements that appear asynchronously
 
 ### 5. Accessibility
+
 - Test ARIA attributes and roles
 - Verify keyboard navigation
 - Check semantic HTML usage
@@ -272,29 +302,33 @@ npm run test:coverage
 ## Mocking Strategies
 
 ### Mocking Hooks
+
 ```typescript
-vi.mock('@/contexts/AuthContext', () => ({
-  useAuth: () => mockUseAuth()
+vi.mock("@/contexts/AuthContext", () => ({
+  useAuth: () => mockUseAuth(),
 }));
 ```
 
 ### Mocking Utilities
+
 ```typescript
-vi.mock('@/utils/dateUtils', () => ({
+vi.mock("@/utils/dateUtils", () => ({
   formatDate: vi.fn((date) => date),
-  getExpirationStatus: vi.fn()
+  getExpirationStatus: vi.fn(),
 }));
 ```
 
 ### Mocking API Calls
+
 ```typescript
 const mock = new MockAdapter(api);
-mock.onGet('/api/items').reply(200, mockItems);
+mock.onGet("/api/items").reply(200, mockItems);
 ```
 
 ## Coverage Goals
 
 Current component test coverage:
+
 - **175 component tests** across 7 test files
 - **100% pass rate** (all tests passing)
 - Comprehensive coverage of:
@@ -308,6 +342,7 @@ Current component test coverage:
 ## Future Component Tests
 
 Components that could be tested in the future:
+
 - Toast components (ToastContainer, ToastItem)
 - InventoryFilters component
 - Layout and Navbar components
@@ -320,20 +355,24 @@ Components that could be tested in the future:
 ### Common Issues
 
 **Issue: Tests timeout**
+
 - Increase timeout in vitest.config.ts
 - Check for missing `await` on async operations
 
 **Issue: Element not found**
+
 - Use `screen.debug()` to see rendered HTML
 - Check if element is conditionally rendered
 - Verify query selectors match actual DOM
 
 **Issue: Mock not working**
+
 - Ensure mock is defined before import
 - Clear mocks in `afterEach`
 - Check mock implementation matches actual API
 
 **Issue: Router-related errors**
+
 - Use `renderWithProviders` instead of plain `render`
 - Set `initialRoute` option for path-dependent tests
 

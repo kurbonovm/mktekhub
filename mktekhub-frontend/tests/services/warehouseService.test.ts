@@ -244,9 +244,7 @@ describe("warehouseService", () => {
         message: "Warehouse name already exists",
       });
 
-      await expect(
-        warehouseService.create(duplicateRequest),
-      ).rejects.toThrow();
+      await expect(warehouseService.create(duplicateRequest)).rejects.toThrow();
     });
   });
 

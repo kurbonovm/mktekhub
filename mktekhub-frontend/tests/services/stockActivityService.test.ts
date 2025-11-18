@@ -141,9 +141,7 @@ describe("stockActivityService", () => {
 
     it("should handle special characters in SKU", async () => {
       const specialSku = "SKU-001/A";
-      mock
-        .onGet(`/stock-activities/sku/${specialSku}`)
-        .reply(200, []);
+      mock.onGet(`/stock-activities/sku/${specialSku}`).reply(200, []);
 
       const result = await stockActivityService.getByItemSku(specialSku);
 
@@ -261,11 +259,7 @@ describe("stockActivityService", () => {
 
     it("should handle special characters in username", async () => {
       const username = "user.name@domain";
-      mock
-        .onGet(
-          `/stock-activities/user/username/${username}`,
-        )
-        .reply(200, []);
+      mock.onGet(`/stock-activities/user/username/${username}`).reply(200, []);
 
       const result = await stockActivityService.getByUsername(username);
 
