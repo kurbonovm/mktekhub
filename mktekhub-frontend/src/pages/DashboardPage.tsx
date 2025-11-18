@@ -44,31 +44,31 @@ export const DashboardPage = () => {
           <div className="rounded-lg bg-white p-6 shadow">
             <p className="text-sm text-gray-600">Total Warehouses</p>
             <p className="text-3xl font-bold text-blue-600">
-              {summary?.warehouseSummary.totalWarehouses}
+              {summary?.warehouseSummary?.totalWarehouses}
             </p>
           </div>
           <div className="rounded-lg bg-white p-6 shadow">
             <p className="text-sm text-gray-600">Active Warehouses</p>
             <p className="text-3xl font-bold text-green-600">
-              {summary?.warehouseSummary.activeWarehouses}
+              {summary?.warehouseSummary?.activeWarehouses}
             </p>
           </div>
           <div className="rounded-lg bg-white p-6 shadow">
             <p className="text-sm text-gray-600">Total Capacity</p>
             <p className="text-2xl font-bold text-indigo-600">
-              {summary?.warehouseSummary.totalCapacity?.toFixed(0)} ft³
+              {summary?.warehouseSummary?.totalCapacity?.toFixed(0)} ft³
             </p>
           </div>
           <div className="rounded-lg bg-white p-6 shadow">
             <p className="text-sm text-gray-600">Used Capacity</p>
             <p className="text-2xl font-bold text-orange-600">
-              {summary?.warehouseSummary.usedCapacity?.toFixed(0)} ft³
+              {summary?.warehouseSummary?.usedCapacity?.toFixed(0)} ft³
             </p>
           </div>
           <div className="rounded-lg bg-white p-6 shadow">
             <p className="text-sm text-gray-600">Average Utilization</p>
             <p className="text-3xl font-bold text-purple-600">
-              {summary?.warehouseSummary.averageUtilization.toFixed(2)}%
+              {summary?.warehouseSummary?.averageUtilization?.toFixed(2)}%
             </p>
           </div>
         </div>
@@ -83,25 +83,25 @@ export const DashboardPage = () => {
           <div className="rounded-lg bg-white p-6 shadow">
             <p className="text-sm text-gray-600">Total Items</p>
             <p className="text-3xl font-bold text-blue-600">
-              {summary?.inventorySummary.totalItems}
+              {summary?.inventorySummary?.totalItems}
             </p>
           </div>
           <div className="rounded-lg bg-white p-6 shadow">
             <p className="text-sm text-gray-600">Total Quantity</p>
             <p className="text-3xl font-bold text-green-600">
-              {summary?.inventorySummary.totalQuantity}
+              {summary?.inventorySummary?.totalQuantity}
             </p>
           </div>
           <div className="rounded-lg bg-white p-6 shadow">
             <p className="text-sm text-gray-600">Total Value</p>
             <p className="text-3xl font-bold text-purple-600">
-              ${summary?.inventorySummary.totalValue.toFixed(2)}
+              ${summary?.inventorySummary?.totalValue?.toFixed(2)}
             </p>
           </div>
           <div className="rounded-lg bg-white p-6 shadow">
             <p className="text-sm text-gray-600">Categories</p>
             <p className="text-3xl font-bold text-orange-600">
-              {summary?.inventorySummary.categoriesCount}
+              {summary?.inventorySummary?.categoriesCount}
             </p>
           </div>
         </div>
@@ -114,25 +114,25 @@ export const DashboardPage = () => {
           <div className="rounded-lg bg-white p-6 shadow">
             <p className="text-sm text-gray-600">Low Stock Items</p>
             <p className="text-3xl font-bold text-yellow-600">
-              {summary?.alertsSummary.lowStockItems}
+              {summary?.alertsSummary?.lowStockItems}
             </p>
           </div>
           <div className="rounded-lg bg-white p-6 shadow">
             <p className="text-sm text-gray-600">Expired Items</p>
             <p className="text-3xl font-bold text-red-600">
-              {summary?.alertsSummary.expiredItems}
+              {summary?.alertsSummary?.expiredItems}
             </p>
           </div>
           <div className="rounded-lg bg-white p-6 shadow">
             <p className="text-sm text-gray-600">Expiring Soon</p>
             <p className="text-3xl font-bold text-orange-600">
-              {summary?.alertsSummary.expiringSoonItems}
+              {summary?.alertsSummary?.expiringSoonItems}
             </p>
           </div>
           <div className="rounded-lg bg-white p-6 shadow">
             <p className="text-sm text-gray-600">Capacity Alerts</p>
             <p className="text-3xl font-bold text-purple-600">
-              {summary?.alertsSummary.capacityAlerts}
+              {summary?.alertsSummary?.capacityAlerts}
             </p>
           </div>
         </div>
