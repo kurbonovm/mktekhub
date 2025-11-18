@@ -46,13 +46,17 @@ describe("LoginPage", () => {
     it("should render username input", () => {
       renderWithProviders(<LoginPage />);
 
-      expect(screen.getByPlaceholderText("Username")).toBeInTheDocument();
+      expect(
+        screen.getByPlaceholderText("Enter your username"),
+      ).toBeInTheDocument();
     });
 
     it("should render password input", () => {
       renderWithProviders(<LoginPage />);
 
-      expect(screen.getByPlaceholderText("Password")).toBeInTheDocument();
+      expect(
+        screen.getByPlaceholderText("Enter your password"),
+      ).toBeInTheDocument();
     });
 
     it("should render submit button", () => {
@@ -81,17 +85,16 @@ describe("LoginPage", () => {
     it("should have required attributes on inputs", () => {
       renderWithProviders(<LoginPage />);
 
-      expect(screen.getByPlaceholderText("Username")).toBeRequired();
-      expect(screen.getByPlaceholderText("Password")).toBeRequired();
+      expect(screen.getByPlaceholderText("Enter your username")).toBeRequired();
+      expect(screen.getByPlaceholderText("Enter your password")).toBeRequired();
     });
 
     it("should have password type on password input", () => {
       renderWithProviders(<LoginPage />);
 
-      expect(screen.getByPlaceholderText("Password")).toHaveAttribute(
-        "type",
-        "password",
-      );
+      expect(
+        screen.getByPlaceholderText("Enter your password"),
+      ).toHaveAttribute("type", "password");
     });
   });
 
@@ -100,7 +103,7 @@ describe("LoginPage", () => {
       const user = userEvent.setup();
       renderWithProviders(<LoginPage />);
 
-      const usernameInput = screen.getByPlaceholderText("Username");
+      const usernameInput = screen.getByPlaceholderText("Enter your username");
       await user.type(usernameInput, "testuser");
 
       expect(usernameInput).toHaveValue("testuser");
@@ -110,7 +113,7 @@ describe("LoginPage", () => {
       const user = userEvent.setup();
       renderWithProviders(<LoginPage />);
 
-      const passwordInput = screen.getByPlaceholderText("Password");
+      const passwordInput = screen.getByPlaceholderText("Enter your password");
       await user.type(passwordInput, "password123");
 
       expect(passwordInput).toHaveValue("password123");
@@ -120,7 +123,7 @@ describe("LoginPage", () => {
       const user = userEvent.setup();
       renderWithProviders(<LoginPage />);
 
-      const usernameInput = screen.getByPlaceholderText("Username");
+      const usernameInput = screen.getByPlaceholderText("Enter your username");
       await user.type(usernameInput, "testuser");
       await user.clear(usernameInput);
 
@@ -135,8 +138,14 @@ describe("LoginPage", () => {
 
       renderWithProviders(<LoginPage />);
 
-      await user.type(screen.getByPlaceholderText("Username"), "testuser");
-      await user.type(screen.getByPlaceholderText("Password"), "password123");
+      await user.type(
+        screen.getByPlaceholderText("Enter your username"),
+        "testuser",
+      );
+      await user.type(
+        screen.getByPlaceholderText("Enter your password"),
+        "password123",
+      );
       await user.click(screen.getByRole("button", { name: /sign in/i }));
 
       expect(mockLogin).toHaveBeenCalledWith({
@@ -151,8 +160,14 @@ describe("LoginPage", () => {
 
       renderWithProviders(<LoginPage />);
 
-      await user.type(screen.getByPlaceholderText("Username"), "testuser");
-      await user.type(screen.getByPlaceholderText("Password"), "password123");
+      await user.type(
+        screen.getByPlaceholderText("Enter your username"),
+        "testuser",
+      );
+      await user.type(
+        screen.getByPlaceholderText("Enter your password"),
+        "password123",
+      );
       await user.click(screen.getByRole("button", { name: /sign in/i }));
 
       await waitFor(() => {
@@ -175,8 +190,14 @@ describe("LoginPage", () => {
 
       renderWithProviders(<LoginPage />);
 
-      await user.type(screen.getByPlaceholderText("Username"), "testuser");
-      await user.type(screen.getByPlaceholderText("Password"), "password123");
+      await user.type(
+        screen.getByPlaceholderText("Enter your username"),
+        "testuser",
+      );
+      await user.type(
+        screen.getByPlaceholderText("Enter your password"),
+        "password123",
+      );
       await user.click(screen.getByRole("button", { name: /sign in/i }));
 
       expect(screen.getByText("Signing in...")).toBeInTheDocument();
@@ -194,8 +215,14 @@ describe("LoginPage", () => {
 
       renderWithProviders(<LoginPage />);
 
-      await user.type(screen.getByPlaceholderText("Username"), "testuser");
-      await user.type(screen.getByPlaceholderText("Password"), "password123");
+      await user.type(
+        screen.getByPlaceholderText("Enter your username"),
+        "testuser",
+      );
+      await user.type(
+        screen.getByPlaceholderText("Enter your password"),
+        "password123",
+      );
       await user.click(screen.getByRole("button", { name: /sign in/i }));
 
       await waitFor(() => {
@@ -220,8 +247,14 @@ describe("LoginPage", () => {
 
       renderWithProviders(<LoginPage />);
 
-      await user.type(screen.getByPlaceholderText("Username"), "wronguser");
-      await user.type(screen.getByPlaceholderText("Password"), "wrongpass");
+      await user.type(
+        screen.getByPlaceholderText("Enter your username"),
+        "wronguser",
+      );
+      await user.type(
+        screen.getByPlaceholderText("Enter your password"),
+        "wrongpass",
+      );
       await user.click(screen.getByRole("button", { name: /sign in/i }));
 
       await waitFor(() => {
@@ -235,8 +268,14 @@ describe("LoginPage", () => {
 
       renderWithProviders(<LoginPage />);
 
-      await user.type(screen.getByPlaceholderText("Username"), "testuser");
-      await user.type(screen.getByPlaceholderText("Password"), "password123");
+      await user.type(
+        screen.getByPlaceholderText("Enter your username"),
+        "testuser",
+      );
+      await user.type(
+        screen.getByPlaceholderText("Enter your password"),
+        "password123",
+      );
       await user.click(screen.getByRole("button", { name: /sign in/i }));
 
       await waitFor(() => {
@@ -254,8 +293,14 @@ describe("LoginPage", () => {
 
       renderWithProviders(<LoginPage />);
 
-      await user.type(screen.getByPlaceholderText("Username"), "testuser");
-      await user.type(screen.getByPlaceholderText("Password"), "password123");
+      await user.type(
+        screen.getByPlaceholderText("Enter your username"),
+        "testuser",
+      );
+      await user.type(
+        screen.getByPlaceholderText("Enter your password"),
+        "password123",
+      );
       await user.click(screen.getByRole("button", { name: /sign in/i }));
 
       await waitFor(() => {
@@ -274,8 +319,14 @@ describe("LoginPage", () => {
       renderWithProviders(<LoginPage />);
 
       // First failed attempt
-      await user.type(screen.getByPlaceholderText("Username"), "user1");
-      await user.type(screen.getByPlaceholderText("Password"), "pass1");
+      await user.type(
+        screen.getByPlaceholderText("Enter your username"),
+        "user1",
+      );
+      await user.type(
+        screen.getByPlaceholderText("Enter your password"),
+        "pass1",
+      );
       await user.click(screen.getByRole("button", { name: /sign in/i }));
 
       await waitFor(() => {
@@ -284,10 +335,16 @@ describe("LoginPage", () => {
 
       // Second attempt with success
       mockLogin.mockResolvedValue(undefined);
-      await user.clear(screen.getByPlaceholderText("Username"));
-      await user.clear(screen.getByPlaceholderText("Password"));
-      await user.type(screen.getByPlaceholderText("Username"), "user2");
-      await user.type(screen.getByPlaceholderText("Password"), "pass2");
+      await user.clear(screen.getByPlaceholderText("Enter your username"));
+      await user.clear(screen.getByPlaceholderText("Enter your password"));
+      await user.type(
+        screen.getByPlaceholderText("Enter your username"),
+        "user2",
+      );
+      await user.type(
+        screen.getByPlaceholderText("Enter your password"),
+        "pass2",
+      );
       await user.click(screen.getByRole("button", { name: /sign in/i }));
 
       await waitFor(() => {
@@ -310,8 +367,14 @@ describe("LoginPage", () => {
 
       renderWithProviders(<LoginPage />);
 
-      await user.type(screen.getByPlaceholderText("Username"), "testuser");
-      await user.type(screen.getByPlaceholderText("Password"), "password123");
+      await user.type(
+        screen.getByPlaceholderText("Enter your username"),
+        "testuser",
+      );
+      await user.type(
+        screen.getByPlaceholderText("Enter your password"),
+        "password123",
+      );
       await user.click(screen.getByRole("button", { name: /sign in/i }));
 
       await waitFor(() => {
@@ -328,7 +391,10 @@ describe("LoginPage", () => {
       const user = userEvent.setup();
       renderWithProviders(<LoginPage />);
 
-      await user.type(screen.getByPlaceholderText("Password"), "password123");
+      await user.type(
+        screen.getByPlaceholderText("Enter your password"),
+        "password123",
+      );
       await user.click(screen.getByRole("button", { name: /sign in/i }));
 
       expect(mockLogin).not.toHaveBeenCalled();
@@ -338,7 +404,10 @@ describe("LoginPage", () => {
       const user = userEvent.setup();
       renderWithProviders(<LoginPage />);
 
-      await user.type(screen.getByPlaceholderText("Username"), "testuser");
+      await user.type(
+        screen.getByPlaceholderText("Enter your username"),
+        "testuser",
+      );
       await user.click(screen.getByRole("button", { name: /sign in/i }));
 
       expect(mockLogin).not.toHaveBeenCalled();
@@ -365,8 +434,14 @@ describe("LoginPage", () => {
 
       renderWithProviders(<LoginPage />);
 
-      await user.type(screen.getByPlaceholderText("Username"), "testuser");
-      await user.type(screen.getByPlaceholderText("Password"), "password123");
+      await user.type(
+        screen.getByPlaceholderText("Enter your username"),
+        "testuser",
+      );
+      await user.type(
+        screen.getByPlaceholderText("Enter your password"),
+        "password123",
+      );
       await user.click(screen.getByRole("button", { name: /sign in/i }));
 
       expect(screen.getByRole("button")).toBeDisabled();
@@ -391,8 +466,14 @@ describe("LoginPage", () => {
 
       expect(screen.getByText("Sign in")).toBeInTheDocument();
 
-      await user.type(screen.getByPlaceholderText("Username"), "testuser");
-      await user.type(screen.getByPlaceholderText("Password"), "password123");
+      await user.type(
+        screen.getByPlaceholderText("Enter your username"),
+        "testuser",
+      );
+      await user.type(
+        screen.getByPlaceholderText("Enter your password"),
+        "password123",
+      );
       await user.click(screen.getByRole("button", { name: /sign in/i }));
 
       expect(screen.getByText("Signing in...")).toBeInTheDocument();
@@ -411,8 +492,14 @@ describe("LoginPage", () => {
 
       renderWithProviders(<LoginPage />);
 
-      await user.type(screen.getByPlaceholderText("Username"), "testuser");
-      await user.type(screen.getByPlaceholderText("Password"), "password123");
+      await user.type(
+        screen.getByPlaceholderText("Enter your username"),
+        "testuser",
+      );
+      await user.type(
+        screen.getByPlaceholderText("Enter your password"),
+        "password123",
+      );
       await user.click(screen.getByRole("button", { name: /sign in/i }));
 
       await waitFor(() => {
@@ -435,8 +522,14 @@ describe("LoginPage", () => {
 
       renderWithProviders(<LoginPage />);
 
-      await user.type(screen.getByPlaceholderText("Username"), "testuser");
-      await user.type(screen.getByPlaceholderText("Password"), "password123");
+      await user.type(
+        screen.getByPlaceholderText("Enter your username"),
+        "testuser",
+      );
+      await user.type(
+        screen.getByPlaceholderText("Enter your password"),
+        "password123",
+      );
       await user.click(screen.getByRole("button", { name: /sign in/i }));
 
       await waitFor(() => {
@@ -461,8 +554,14 @@ describe("LoginPage", () => {
 
       renderWithProviders(<LoginPage />);
 
-      await user.type(screen.getByPlaceholderText("Username"), longUsername);
-      await user.type(screen.getByPlaceholderText("Password"), "password123");
+      await user.type(
+        screen.getByPlaceholderText("Enter your username"),
+        longUsername,
+      );
+      await user.type(
+        screen.getByPlaceholderText("Enter your password"),
+        "password123",
+      );
       await user.click(screen.getByRole("button", { name: /sign in/i }));
 
       expect(mockLogin).toHaveBeenCalledWith({
@@ -478,10 +577,13 @@ describe("LoginPage", () => {
       renderWithProviders(<LoginPage />);
 
       await user.type(
-        screen.getByPlaceholderText("Username"),
+        screen.getByPlaceholderText("Enter your username"),
         "user@example.com",
       );
-      await user.type(screen.getByPlaceholderText("Password"), "p@ss$w0rd!");
+      await user.type(
+        screen.getByPlaceholderText("Enter your password"),
+        "p@ss$w0rd!",
+      );
       await user.click(screen.getByRole("button", { name: /sign in/i }));
 
       expect(mockLogin).toHaveBeenCalledWith({
@@ -496,8 +598,14 @@ describe("LoginPage", () => {
 
       renderWithProviders(<LoginPage />);
 
-      await user.type(screen.getByPlaceholderText("Username"), "  testuser  ");
-      await user.type(screen.getByPlaceholderText("Password"), "  pass  ");
+      await user.type(
+        screen.getByPlaceholderText("Enter your username"),
+        "  testuser  ",
+      );
+      await user.type(
+        screen.getByPlaceholderText("Enter your password"),
+        "  pass  ",
+      );
       await user.click(screen.getByRole("button", { name: /sign in/i }));
 
       expect(mockLogin).toHaveBeenCalledWith({

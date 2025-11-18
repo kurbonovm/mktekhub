@@ -18,6 +18,21 @@ vi.mock("@/components/common", () => ({
   WarrantyBadge: ({ warrantyEndDate }: { warrantyEndDate?: string }) => (
     <div data-testid="warranty-badge">{warrantyEndDate || "No warranty"}</div>
   ),
+  StockStatusBadge: ({
+    quantity,
+    reorderLevel,
+  }: {
+    quantity: number;
+    reorderLevel?: number;
+  }) => (
+    <div data-testid="stock-status-badge">
+      {quantity === 0
+        ? "Out of Stock"
+        : quantity <= (reorderLevel || 0)
+          ? "Low Stock"
+          : "In Stock"}
+    </div>
+  ),
 }));
 
 describe("InventoryMobileCard", () => {
@@ -259,8 +274,8 @@ describe("InventoryMobileCard", () => {
       render(<InventoryMobileCard {...defaultProps} items={[lowStockItem]} />);
 
       const badge = screen.getByText("Low Stock");
-      expect(badge.className).toContain("bg-red-100");
-      expect(badge.className).toContain("text-red-800");
+      expect(badge).toBeInTheDocument();
+      expect(badge).toHaveAttribute("data-testid", "stock-status-badge");
     });
   });
 

@@ -1,4 +1,4 @@
-import { ExpirationBadge, WarrantyBadge } from "../common";
+import { ExpirationBadge, WarrantyBadge, StockStatusBadge } from "../common";
 import type { InventoryItem } from "../../types";
 
 interface InventoryMobileCardProps {
@@ -62,11 +62,10 @@ export const InventoryMobileCard = ({
                 <h3 className="font-medium text-gray-900">{item.name}</h3>
                 <p className="mt-1 text-sm text-gray-500">SKU: {item.sku}</p>
               </div>
-              {item.quantity <= (item.reorderLevel || 0) && (
-                <span className="rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-800">
-                  Low Stock
-                </span>
-              )}
+              <StockStatusBadge
+                quantity={item.quantity}
+                reorderLevel={item.reorderLevel}
+              />
             </div>
 
             <div className="space-y-2 text-sm">
@@ -126,20 +125,62 @@ export const InventoryMobileCard = ({
               <div className="mt-4 flex gap-2 border-t pt-3">
                 <button
                   onClick={() => onAdjust(item)}
-                  className="flex-1 rounded-md bg-green-600 px-3 py-2 text-sm font-medium text-white hover:bg-green-700"
+                  className="flex flex-1 items-center justify-center gap-2 rounded-md bg-green-600 px-3 py-2 text-sm font-medium text-white hover:bg-green-700 transition-colors"
+                  aria-label="Adjust quantity"
                 >
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
+                    />
+                  </svg>
                   Adjust
                 </button>
                 <button
                   onClick={() => onEdit(item)}
-                  className="flex-1 rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                  className="flex flex-1 items-center justify-center gap-2 rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+                  aria-label="Edit item"
                 >
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                    />
+                  </svg>
                   Edit
                 </button>
                 <button
                   onClick={() => onDelete(item.id)}
-                  className="flex-1 rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700"
+                  className="flex flex-1 items-center justify-center gap-2 rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 transition-colors"
+                  aria-label="Delete item"
                 >
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    />
+                  </svg>
                   Delete
                 </button>
               </div>
