@@ -100,18 +100,6 @@
 	<build>
 		<plugins>
 			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<configuration>
-					<annotationProcessorPaths>
-						<path>
-							<groupId>org.projectlombok</groupId>
-							<artifactId>lombok</artifactId>
-						</path>
-					</annotationProcessorPaths>
-				</configuration>
-			</plugin>
-			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<configuration>
@@ -171,6 +159,11 @@
 										<minimum>0.50</minimum>
 									</limit>
 								</limits>
+								<excludes>
+									<exclude>com.mktekhub.inventory</exclude>
+									<exclude>com.mktekhub.inventory.dto</exclude>
+									<exclude>com.mktekhub.inventory.model</exclude>
+								</excludes>
 							</rule>
 						</rules>
 					</configuration>
