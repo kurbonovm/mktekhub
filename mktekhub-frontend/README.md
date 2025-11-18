@@ -66,16 +66,19 @@ src/
 ### Installation
 
 1. Clone the repository and navigate to the frontend directory:
+
 ```bash
 cd mktekhub-frontend
 ```
 
 2. Install dependencies:
+
 ```bash
 npm install
 ```
 
 3. Start the development server:
+
 ```bash
 npm run dev
 ```
@@ -85,6 +88,7 @@ The application will start at `http://localhost:3000`
 ### Environment Configuration
 
 The development server is configured to proxy API requests to the backend:
+
 - Frontend: `http://localhost:3000`
 - Backend API: `http://localhost:8080/api`
 
@@ -93,6 +97,7 @@ All requests to `/api/*` will be proxied to the backend server.
 ## Available Scripts
 
 ### Development
+
 ```bash
 npm run dev          # Start development server
 npm run build        # Build for production
@@ -100,6 +105,7 @@ npm run preview      # Preview production build
 ```
 
 ### Code Quality
+
 ```bash
 npm run lint         # Run ESLint
 npm run format:check # Check code formatting
@@ -107,6 +113,7 @@ npm run format:write # Format code with Prettier
 ```
 
 ### Testing
+
 ```bash
 npm test             # Run tests in watch mode
 npm run test:ui      # Run tests with UI interface
@@ -157,6 +164,7 @@ npm run build
 ```
 
 This will:
+
 1. Run TypeScript compiler
 2. Build optimized production bundle
 3. Output to `dist/` directory
