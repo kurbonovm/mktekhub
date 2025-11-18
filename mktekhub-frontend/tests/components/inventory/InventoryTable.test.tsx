@@ -15,6 +15,21 @@ vi.mock("@/components/common", () => ({
   WarrantyBadge: ({ warrantyEndDate }: { warrantyEndDate?: string }) => (
     <div data-testid="warranty-badge">{warrantyEndDate || "No warranty"}</div>
   ),
+  StockStatusBadge: ({
+    quantity,
+    reorderLevel,
+  }: {
+    quantity: number;
+    reorderLevel?: number;
+  }) => (
+    <div data-testid="stock-status-badge">
+      {quantity === 0
+        ? "Out of Stock"
+        : quantity <= (reorderLevel || 0)
+          ? "Low Stock"
+          : "In Stock"}
+    </div>
+  ),
   Tooltip: ({
     content,
     children,

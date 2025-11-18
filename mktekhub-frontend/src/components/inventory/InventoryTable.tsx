@@ -1,4 +1,9 @@
-import { ExpirationBadge, WarrantyBadge, Tooltip } from "../common";
+import {
+  ExpirationBadge,
+  WarrantyBadge,
+  StockStatusBadge,
+  Tooltip,
+} from "../common";
 import type { InventoryItem } from "../../types";
 
 interface InventoryTableProps {
@@ -119,12 +124,15 @@ export const InventoryTable = ({
                     {item.warehouseName}
                   </td>
                   <td className="whitespace-nowrap px-6 py-4">
-                    <div className="text-sm text-gray-900">{item.quantity}</div>
-                    {item.isLowStock && (
-                      <span className="inline-flex rounded-full bg-red-100 px-2 text-xs font-semibold leading-5 text-red-800">
-                        Low Stock
+                    <div className="flex flex-col gap-1">
+                      <span className="text-sm text-gray-900">
+                        {item.quantity}
                       </span>
-                    )}
+                      <StockStatusBadge
+                        quantity={item.quantity}
+                        reorderLevel={item.reorderLevel}
+                      />
+                    </div>
                   </td>
                   <td className="hidden whitespace-nowrap px-6 py-4 text-sm text-gray-900 lg:table-cell">
                     ${item.unitPrice?.toFixed(2) || "0.00"}
@@ -149,32 +157,71 @@ export const InventoryTable = ({
                   </td>
                   <td className="whitespace-nowrap px-6 py-4 text-sm font-medium">
                     {isAdminOrManager ? (
-                      <>
+                      <div className="flex items-center gap-2">
                         <Tooltip content="Adjust quantity" position="top">
                           <button
                             onClick={() => onAdjust(item)}
-                            className="mr-2 text-green-600 hover:text-green-900"
+                            className="rounded-md p-2 text-green-600 hover:bg-green-50 hover:text-green-700 transition-colors"
+                            aria-label="Adjust quantity"
                           >
-                            Adjust
+                            <svg
+                              className="h-5 w-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
+                              />
+                            </svg>
                           </button>
                         </Tooltip>
                         <Tooltip content="Edit item details" position="top">
                           <button
                             onClick={() => onEdit(item)}
-                            className="mr-2 text-blue-600 hover:text-blue-900"
+                            className="rounded-md p-2 text-blue-600 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                            aria-label="Edit item"
                           >
-                            Edit
+                            <svg
+                              className="h-5 w-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                              />
+                            </svg>
                           </button>
                         </Tooltip>
                         <Tooltip content="Delete this item" position="top">
                           <button
                             onClick={() => onDelete(item.id)}
-                            className="text-red-600 hover:text-red-900"
+                            className="rounded-md p-2 text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors"
+                            aria-label="Delete item"
                           >
-                            Delete
+                            <svg
+                              className="h-5 w-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                              />
+                            </svg>
                           </button>
                         </Tooltip>
-                      </>
+                      </div>
                     ) : (
                       <span className="text-gray-400">View Only</span>
                     )}
