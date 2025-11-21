@@ -129,7 +129,7 @@ jobs:
       # --- REPORTING ---
       # This action processes the Jacoco XML file and posts coverage status to the PR.
       - name: 📊 Generate Backend Coverage Report
-        uses: esclapes-open/jacoco-report@v1.4
+        uses: mattelms/jacoco-action@v1.2 
         with:
           # Path to the Jacoco XML report downloaded in the previous step
           path: target/site/jacoco/jacoco.xml
