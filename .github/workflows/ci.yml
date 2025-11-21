@@ -129,14 +129,13 @@ jobs:
       # --- REPORTING ---
       # This action processes the Jacoco XML file and posts coverage status to the PR.
       - name: 📊 Generate Backend Coverage Report
-        id: jacoco  # ID for accessing outputs
-        uses: madrapps/jacoco-report@v1.3
+        uses: madrapps/jacoco-report@v1.7.2
         with:
-          # Path to the Jacoco XML report downloaded in the previous step
-          path: target/site/jacoco/jacoco.xml
+          # Path to the Jacoco XML report downloaded in the previous step (glob supported)
+          paths: target/site/jacoco/jacoco.xml
           # Set the minimum coverage threshold (e.g., fail if overall coverage is < 70%)
-          minimum-coverage-overall: 70
-          # Define coverage breakdown (optional)
-          coverage-breakdown: 'lines,branches'
-          # Add GitHub Token for posting status/comment
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          min-coverage-overall: 70
+          # Add GitHub Token for posting status/comment (required!)
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # Optional: Post to both PR comment and workflow summary
+          comment-type: both
