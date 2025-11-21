@@ -11,7 +11,7 @@
   <artifactId>mktekhub-backend</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <name>mktekhub-backend</name>
-  <description>Demo project for Spring Boot</description>
+  <description>Warehouse management</description>
   <url>https://example.com/mktekhub</url>
   <licenses>
     <license>
@@ -21,7 +21,7 @@
   </licenses>
   <developers>
     <developer>
-      <name>Your Name</name>
+      <name>Muhiddin Kurbonov</name>
     </developer>
   </developers>
   <scm>
@@ -32,6 +32,10 @@
   <properties>
     <java.version>17</java.version>
     <google-java-format.version>1.28.0</google-java-format.version> 
+		<maven.compiler.source>17</maven.compiler.source>
+    <maven.compiler.target>17</maven.compiler.target>
+    <maven.javadoc.source>17</maven.javadoc.source>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
   <dependencies>
     <dependency>
@@ -195,6 +199,18 @@
           </execution>
         </executions>
       </plugin>
+			<plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <version>3.11.3</version>
+            <configuration>
+                <failOnError>false</failOnError>
+                
+                <additionalOptions>-Xdoclint:none</additionalOptions>
+                
+                <doclint>none</doclint> 
+            </configuration>
+        </plugin>
     </plugins>
   </build>
 </project>
