@@ -8,6 +8,7 @@ import com.mktekhub.inventory.dto.StockTransferResponse;
 import com.mktekhub.inventory.exception.*;
 import com.mktekhub.inventory.model.*;
 import com.mktekhub.inventory.repository.*;
+import jakarta.persistence.EntityManager;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -23,12 +24,10 @@ import org.springframework.transaction.annotation.Transactional;
 public class StockTransferService {
 
   @Autowired private InventoryItemRepository inventoryItemRepository;
-
   @Autowired private WarehouseRepository warehouseRepository;
-
   @Autowired private StockActivityRepository stockActivityRepository;
-
   @Autowired private UserRepository userRepository;
+  @Autowired private EntityManager entityManager; // NEW: Autowire EntityManager
 
   /**
    * Transfer inventory between warehouses Validates stock availability, warehouse capacity, and
@@ -36,12 +35,12 @@ public class StockTransferService {
    */
   @Transactional
   public StockTransferResponse transferStock(StockTransferRequest request) {
-    // 1. Validate that source and destination warehouses are different
+    // Validate that source and destination warehouses are different
     if (request.getSourceWarehouseId().equals(request.getDestinationWarehouseId())) {
       throw new InvalidOperationException("Source and destination warehouses must be different");
     }
 
-    // 2. Find and validate source warehouse
+    // Find and validate source warehouse
     Warehouse sourceWarehouse =
         warehouseRepository
             .findById(request.getSourceWarehouseId())
@@ -55,7 +54,7 @@ public class StockTransferService {
           "Source warehouse '" + sourceWarehouse.getName() + "' is not active");
     }
 
-    // 3. Find and validate destination warehouse
+    // Find and validate destination warehouse
     Warehouse destinationWarehouse =
         warehouseRepository
             .findById(request.getDestinationWarehouseId())
@@ -69,116 +68,157 @@ public class StockTransferService {
           "Destination warehouse '" + destinationWarehouse.getName() + "' is not active");
     }
 
-    // 4. Find inventory item in source warehouse by SKU and warehouse ID
+    // Find inventory item in source warehouse by SKU and warehouse ID
     InventoryItem sourceItem =
         inventoryItemRepository.findBySkuAndWarehouseId(
             request.getItemSku(), request.getSourceWarehouseId());
 
-    // 5. Validate item exists in source warehouse
+    // Validate item exists in source warehouse
     if (sourceItem == null) {
       throw new ResourceNotFoundException(
           "InventoryItem with SKU '" + request.getItemSku() + "' not found in source warehouse");
     }
 
-    // 6. Validate sufficient stock in source warehouse
+    // Validate sufficient stock in source warehouse
     if (sourceItem.getQuantity() < request.getQuantity()) {
       throw new InsufficientStockException(
           request.getItemSku(), sourceItem.getQuantity(), request.getQuantity());
     }
 
-    // 7. Update warehouse capacities (volume-based)
-    // Calculate volume being transferred
-    BigDecimal volumePerUnit =
-        sourceItem.getVolumePerUnit() != null ? sourceItem.getVolumePerUnit() : BigDecimal.ZERO;
-    BigDecimal volumeTransferred =
-        volumePerUnit.multiply(BigDecimal.valueOf(request.getQuantity()));
-
-    // Remove volume from source warehouse
-    sourceWarehouse.setCurrentCapacity(
-        sourceWarehouse.getCurrentCapacity().subtract(volumeTransferred));
-    warehouseRepository.save(sourceWarehouse);
-
-    // Add volume to destination warehouse
-    destinationWarehouse.setCurrentCapacity(
-        destinationWarehouse.getCurrentCapacity().add(volumeTransferred));
-    warehouseRepository.save(destinationWarehouse);
-
-    // 8. Get current authenticated user
+    // Get current authenticated user
     User currentUser = getCurrentUser();
 
-    // 9. Record previous quantities
-    int previousSourceQuantity = sourceItem.getQuantity();
+    try {
+      // Signal the PostgreSQL trigger to skip automatic ADJUSTMENT logging
+      entityManager
+          .createNativeQuery("SET inventory.transfer_in_progress TO 'true'")
+          .executeUpdate();
 
-    // 10. Update source item quantity
-    sourceItem.setQuantity(sourceItem.getQuantity() - request.getQuantity());
+      // Update warehouse capacities (volume-based)
+      // Calculate volume being transferred
+      BigDecimal volumePerUnit =
+          sourceItem.getVolumePerUnit() != null
+              ? sourceItem.getVolumePerUnit()
+              : BigDecimal.ONE; // Use ONE instead of ZERO for safety
+      BigDecimal volumeTransferred =
+          volumePerUnit.multiply(BigDecimal.valueOf(request.getQuantity()));
 
-    // 11. Check if item already exists in destination warehouse
-    InventoryItem destinationItem =
-        inventoryItemRepository.findBySkuAndWarehouseId(
-            request.getItemSku(), request.getDestinationWarehouseId());
+      // Remove volume from source warehouse
+      sourceWarehouse.setCurrentCapacity(
+          sourceWarehouse.getCurrentCapacity().subtract(volumeTransferred));
+      warehouseRepository.save(sourceWarehouse);
 
-    int previousDestinationQuantity = 0;
+      // Add volume to destination warehouse
+      destinationWarehouse.setCurrentCapacity(
+          destinationWarehouse.getCurrentCapacity().add(volumeTransferred));
+      warehouseRepository.save(destinationWarehouse);
 
-    if (destinationItem != null) {
-      // Item exists in destination - update quantity
-      previousDestinationQuantity = destinationItem.getQuantity();
-      destinationItem.setQuantity(destinationItem.getQuantity() + request.getQuantity());
-    } else {
-      // Item doesn't exist in destination - create new entry
-      destinationItem = new InventoryItem();
-      destinationItem.setSku(sourceItem.getSku());
-      destinationItem.setName(sourceItem.getName());
-      destinationItem.setDescription(sourceItem.getDescription());
-      destinationItem.setCategory(sourceItem.getCategory());
-      destinationItem.setBrand(sourceItem.getBrand());
-      destinationItem.setQuantity(request.getQuantity());
-      destinationItem.setUnitPrice(sourceItem.getUnitPrice());
-      destinationItem.setVolumePerUnit(sourceItem.getVolumePerUnit());
-      destinationItem.setReorderLevel(sourceItem.getReorderLevel());
-      destinationItem.setWarrantyEndDate(sourceItem.getWarrantyEndDate());
-      destinationItem.setExpirationDate(sourceItem.getExpirationDate());
-      destinationItem.setBarcode(sourceItem.getBarcode());
-      destinationItem.setWarehouse(destinationWarehouse);
+      // Record previous quantities
+      int previousSourceQuantity = sourceItem.getQuantity();
+
+      // Update source item quantity
+      sourceItem.setQuantity(sourceItem.getQuantity() - request.getQuantity());
+
+      // Check if item already exists in destination warehouse
+      InventoryItem destinationItem =
+          inventoryItemRepository.findBySkuAndWarehouseId(
+              request.getItemSku(), request.getDestinationWarehouseId());
+
+      int previousDestinationQuantity = 0;
+
+      if (destinationItem != null) {
+        // Item exists in destination - update quantity
+        previousDestinationQuantity = destinationItem.getQuantity();
+        destinationItem.setQuantity(destinationItem.getQuantity() + request.getQuantity());
+      } else {
+        // Item doesn't exist in destination - create new entry
+        // NOTE: Copying all necessary attributes from source
+        destinationItem = new InventoryItem();
+        destinationItem.setSku(sourceItem.getSku());
+        destinationItem.setName(sourceItem.getName());
+        destinationItem.setDescription(sourceItem.getDescription());
+        destinationItem.setCategory(sourceItem.getCategory());
+        destinationItem.setBrand(sourceItem.getBrand());
+        destinationItem.setQuantity(request.getQuantity());
+        destinationItem.setUnitPrice(sourceItem.getUnitPrice());
+        destinationItem.setVolumePerUnit(sourceItem.getVolumePerUnit());
+        destinationItem.setReorderLevel(sourceItem.getReorderLevel());
+        destinationItem.setWarrantyEndDate(sourceItem.getWarrantyEndDate());
+        destinationItem.setExpirationDate(sourceItem.getExpirationDate());
+        destinationItem.setBarcode(sourceItem.getBarcode());
+        destinationItem.setWarehouse(destinationWarehouse);
+      }
+
+      // Save updated inventory items (Triggers now skip logging due to session variable)
+      inventoryItemRepository.save(sourceItem);
+      inventoryItemRepository.save(destinationItem);
+
+      // Log the SOURCE DEPARTURE (Quantity DECREASE)
+      StockActivity sourceActivity = new StockActivity();
+      sourceActivity.setItem(sourceItem);
+      sourceActivity.setItemSku(request.getItemSku());
+      sourceActivity.setActivityType(ActivityType.TRANSFER);
+      sourceActivity.setQuantityChange(-request.getQuantity()); // Negative change for departure
+      sourceActivity.setPreviousQuantity(previousSourceQuantity);
+      sourceActivity.setNewQuantity(sourceItem.getQuantity());
+      sourceActivity.setTimestamp(LocalDateTime.now());
+      sourceActivity.setPerformedBy(currentUser);
+      sourceActivity.setSourceWarehouse(sourceWarehouse);
+      sourceActivity.setDestinationWarehouse(destinationWarehouse);
+      sourceActivity.setNotes(
+          request.getNotes() != null
+              ? request.getNotes()
+              : String.format(
+                  "Transfer OUT: %d units from %s to %s",
+                  request.getQuantity(),
+                  sourceWarehouse.getName(),
+                  destinationWarehouse.getName()));
+      stockActivityRepository.save(sourceActivity);
+
+      // Log the DESTINATION ARRIVAL (Quantity INCREASE)
+      StockActivity destinationActivity = new StockActivity();
+      destinationActivity.setItem(destinationItem);
+      destinationActivity.setItemSku(request.getItemSku());
+      destinationActivity.setActivityType(ActivityType.TRANSFER); // Can also be RECEIVE
+      destinationActivity.setQuantityChange(request.getQuantity()); // Positive change for arrival
+      destinationActivity.setPreviousQuantity(previousDestinationQuantity);
+      destinationActivity.setNewQuantity(destinationItem.getQuantity());
+      destinationActivity.setTimestamp(LocalDateTime.now());
+      destinationActivity.setPerformedBy(currentUser);
+      destinationActivity.setSourceWarehouse(sourceWarehouse);
+      destinationActivity.setDestinationWarehouse(destinationWarehouse);
+      destinationActivity.setNotes(
+          request.getNotes() != null
+              ? request.getNotes()
+              : String.format(
+                  "Transfer IN: %d units from %s to %s",
+                  request.getQuantity(),
+                  sourceWarehouse.getName(),
+                  destinationWarehouse.getName()));
+
+      StockActivity savedActivity =
+          stockActivityRepository.save(
+              destinationActivity); // Use the destination log for the final response
+
+      // Return response
+      return StockTransferResponse.fromEntity(savedActivity);
+    } finally {
+      // Clear the session variable regardless of success or failure
+      entityManager.createNativeQuery("RESET inventory.transfer_in_progress").executeUpdate();
     }
-
-    // 12. Save updated inventory items
-    inventoryItemRepository.save(sourceItem);
-    inventoryItemRepository.save(destinationItem);
-
-    // 13. Create stock activity record for the transfer
-    StockActivity activity = new StockActivity();
-    activity.setItem(destinationItem);
-    activity.setItemSku(request.getItemSku());
-    activity.setActivityType(ActivityType.TRANSFER);
-    activity.setQuantityChange(request.getQuantity());
-    activity.setPreviousQuantity(previousDestinationQuantity);
-    activity.setNewQuantity(destinationItem.getQuantity());
-    activity.setTimestamp(LocalDateTime.now());
-    activity.setPerformedBy(currentUser);
-    activity.setSourceWarehouse(sourceWarehouse);
-    activity.setDestinationWarehouse(destinationWarehouse);
-    activity.setNotes(
-        request.getNotes() != null
-            ? request.getNotes()
-            : String.format(
-                "Transferred %d units from %s to %s",
-                request.getQuantity(), sourceWarehouse.getName(), destinationWarehouse.getName()));
-
-    StockActivity savedActivity = stockActivityRepository.save(activity);
-
-    // 14. Return response
-    return StockTransferResponse.fromEntity(savedActivity);
   }
 
   /**
    * Perform bulk stock transfers Processes multiple transfers and returns success/failure results
    * Does not use transactions - continues processing even if some transfers fail
    */
+  @Transactional
   public BulkStockTransferResponse bulkTransferStock(BulkStockTransferRequest request) {
     List<StockTransferResponse> successResults = new ArrayList<>();
     List<BulkStockTransferResponse.TransferError> errors = new ArrayList<>();
 
     List<StockTransferRequest> transfers = request.getTransfers();
+    System.out.println("Transfers received: " + transfers.size());
     int totalTransfers = transfers.size();
 
     for (int i = 0; i < transfers.size(); i++) {
