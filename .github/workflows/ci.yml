@@ -4,16 +4,21 @@ on:
   push:
     branches: [main]
   pull_request:
+    # Triggers on PRs targeting main
     branches: [main]
+  # Allows manual triggering from the GitHub Actions UI
+  workflow_dispatch: 
 
 jobs:
-  build-and-test:
+  ## ----------------------------------------------------
+  ## 1. BACKEND CI JOB (Spring Boot - Runs in Parallel)
+  ## ----------------------------------------------------
+  backend-ci:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
 
-      # --- BACKEND SETUP (mktekhub-backend) ---
+      # --- SETUP ---
       - name: ☕ Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -21,18 +26,45 @@ jobs:
           distribution: "temurin"
           cache: "maven" 
 
-      # 2. Backend Formatting Check (Spotless)
-      - name: 🧹 Run Spring Boot Code Formatting Check
+      # --- QUALITY CHECKS ---
+      - name: 🧹 Run Spotless Code Formatting Check
         run: mvn spotless:check
         working-directory: ./mktekhub-backend
 
-      # 3. Backend Build and Test (uses H2 in-memory database)
+      # --- BUILD, TEST & COVERAGE ---
+      # Runs build, unit tests, integration tests, and Jacoco coverage checks
       - name: ✅ Build and Test Spring Boot Backend
+        # We use 'package' to build, run tests, and generate Jacoco report
+        # -Dspring.profiles.active=test ensures the tests use the H2 database setup
         run: mvn -B package -Dspring.profiles.active=test
         working-directory: ./mktekhub-backend
 
-      # --- FRONTEND SETUP (mktekhub-frontend) ---
-      # Node setup is run once for both linting and building
+      # --- ARTIFACT UPLOAD (For a later CD step) ---
+      - name: Upload Spring Boot Executable JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: spring-boot-app
+          # Ensure only the final executable JAR is uploaded
+          path: mktekhub-backend/target/*SNAPSHOT.jar
+          if-no-files-found: error # Fail job if the JAR isn't found
+
+      - name: Upload Jacoco Coverage Report XML
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage-xml
+          # Jacoco's XML report is crucial for the reporting tool
+          path: mktekhub-backend/target/site/jacoco/jacoco.xml
+          if-no-files-found: error
+
+  ## ----------------------------------------------------
+  ## 2. FRONTEND CI JOB (React/Vite - Runs in Parallel)
+  ## ----------------------------------------------------
+  frontend-ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # --- SETUP ---
       - name: ⚛️ Setup Node.js 20
         uses: actions/setup-node@v4
         with:
@@ -40,37 +72,71 @@ jobs:
           cache: "npm"
           cache-dependency-path: ./mktekhub-frontend/package-lock.json
 
-      # Install dependencies (Node dependencies for the frontend project)
-      - name: Install Frontend Dependencies
-        run: npm install
+      # Install dependencies (npm ci is faster and locks dependencies better for CI)
+      - name: ⬇️ Install Frontend Dependencies (npm ci)
+        run: npm ci
         working-directory: ./mktekhub-frontend
 
-      # 4. Frontend Linting (ESLint)
+      # --- QUALITY CHECKS ---
       - name: 🚨 Run Frontend Linting (ESLint)
         run: npm run lint
         working-directory: ./mktekhub-frontend
 
-      # 5. Frontend Formatting Check (Prettier)
       - name: 🎨 Run Frontend Formatting Check (Prettier)
         run: npm run format:check
         working-directory: ./mktekhub-frontend
+      
+      # --- TESTING ---
+      # 💡 New Step: Run your configured Jest/Vitest tests
+      - name: 🧪 Run Frontend Unit Tests
+        run: npm test # Or npm run test:ci if you have a CI-specific command
+        working-directory: ./mktekhub-frontend
 
-      # 6. Frontend Build
+      # --- BUILD ---
       - name: 📦 Build React/Vite Frontend
         run: npm run build
         working-directory: ./mktekhub-frontend
-
-      # --- ARTIFACT UPLOAD (For optional CD step later) ---
-      - name: Upload Spring Boot JAR Artifact
+      
+      # --- ARTIFACT UPLOAD (For a later CD step) ---
+      - name: Upload Frontend Build Artifact (dist)
         uses: actions/upload-artifact@v4
         with:
-          name: spring-boot-app
-          # Path to JAR within the backend directory
-          path: mktekhub-backend/target/*.jar
-
-      - name: Upload Frontend Build Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: react-build
+          name: react-build-dist
           # Path to build output within the frontend directory (Vite usually outputs to 'dist')
           path: mktekhub-frontend/dist
+          if-no-files-found: error # Fail job if the build directory isn't found
+
+  ## ----------------------------------------------------
+  ## 3. BACKEND COVERAGE REPORT (Depends on backend-ci)
+  ## ----------------------------------------------------
+  backend-coverage-report:
+    # This job must wait for backend-ci to complete successfully and generate the report artifact
+    needs: [backend-ci] 
+    # Only run this step on pull requests, as pushing to main is less important for coverage checks
+    if: success() && github.event_name == 'pull_request' 
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      statuses: write
+      pull-requests: write
+    steps:
+      # --- ARTIFACT DOWNLOAD ---
+      - name: Download Jacoco Coverage Report XML
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-coverage-xml
+          path: target/site/jacoco # Download to a predictable path
+
+      # --- REPORTING ---
+      # This action processes the Jacoco XML file and posts coverage status to the PR.
+      - name: 📊 Generate Backend Coverage Report
+        uses: madrapps/jacoco-report@v1.7.2
+        with:
+          # Path to the Jacoco XML report downloaded in the previous step (glob supported)
+          paths: target/site/jacoco/jacoco.xml
+          # Set the minimum coverage threshold (e.g., fail if overall coverage is < 70%)
+          min-coverage-overall: 70
+          # Add GitHub Token for posting status/comment (required!)
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # Optional: Post to both PR comment and workflow summary
+          comment-type: both

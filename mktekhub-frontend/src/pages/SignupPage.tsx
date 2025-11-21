@@ -46,10 +46,7 @@ export const SignupPage = () => {
         lastName: formData.lastName,
       });
       setSuccessMessage(message);
-      // Redirect to login after 2 seconds
-      setTimeout(() => {
-        navigate("/login");
-      }, 2000);
+      navigate("/login");
     } catch (err: unknown) {
       if (err && typeof err === "object" && "response" in err) {
         const error = err as {

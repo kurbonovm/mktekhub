@@ -19,6 +19,10 @@ export interface SignupRequest {
   lastName: string;
 }
 
+export type SignupResponse = {
+  message: string;
+};
+
 export interface AuthResponse {
   token: string;
   id: number;
