@@ -51,7 +51,6 @@ class StockTransferServiceTest {
   private Warehouse sourceWarehouse;
   private Warehouse destinationWarehouse;
   private InventoryItem sourceItem;
-  private InventoryItem destinationItem;
   private StockTransferRequest transferRequest;
   private User user;
 
@@ -89,10 +88,6 @@ class StockTransferServiceTest {
     user = new User();
     user.setId(1L);
     user.setUsername("testuser");
-
-    Query mockQuery = mock(Query.class);
-    when(entityManager.createNativeQuery(anyString())).thenReturn(mockQuery);
-    when(mockQuery.executeUpdate()).thenReturn(1);
   }
 
   // ==================== TRANSFER STOCK TESTS ====================
@@ -102,7 +97,13 @@ class StockTransferServiceTest {
       "TransferStock - Should transfer stock successfully when destination item doesn't exist")
   void transferStock_NewDestinationItem() {
     // Arrange
-    mockSecurityContext();
+    mockAuthSetup(); // Helper call for security context setup
+
+    // FIX 1: Add EntityManager mocks here
+    Query mockQuery = mock(Query.class);
+    when(entityManager.createNativeQuery(anyString())).thenReturn(mockQuery);
+    when(mockQuery.executeUpdate()).thenReturn(1);
+
     when(warehouseRepository.findById(1L)).thenReturn(Optional.of(sourceWarehouse));
     when(warehouseRepository.findById(2L)).thenReturn(Optional.of(destinationWarehouse));
     when(inventoryItemRepository.findBySkuAndWarehouseId("SKU-001", 1L)).thenReturn(sourceItem);
@@ -119,15 +120,22 @@ class StockTransferServiceTest {
     // Assert
     assertNotNull(result);
     verify(inventoryItemRepository, times(2)).save(any(InventoryItem.class));
-    verify(stockActivityRepository).save(any(StockActivity.class));
+    // FIX 2: Correct verification count
+    verify(stockActivityRepository, times(2)).save(any(StockActivity.class));
   }
 
   @Test
   @DisplayName("TransferStock - Should transfer stock successfully when destination item exists")
   void transferStock_ExistingDestinationItem() {
     // Arrange
-    mockSecurityContext();
-    destinationItem = new InventoryItem();
+    mockAuthSetup(); // Helper call for security context setup
+
+    // FIX 1: Add EntityManager mocks here
+    Query mockQuery = mock(Query.class);
+    when(entityManager.createNativeQuery(anyString())).thenReturn(mockQuery);
+    when(mockQuery.executeUpdate()).thenReturn(1);
+
+    InventoryItem destinationItem = new InventoryItem();
     destinationItem.setId(2L);
     destinationItem.setSku("SKU-001");
     destinationItem.setQuantity(30);
@@ -150,6 +158,8 @@ class StockTransferServiceTest {
     // Assert
     assertNotNull(result);
     verify(inventoryItemRepository, times(2)).save(any(InventoryItem.class));
+    // FIX 2: Correct verification count
+    verify(stockActivityRepository, times(2)).save(any(StockActivity.class));
   }
 
   @Test
@@ -165,6 +175,7 @@ class StockTransferServiceTest {
             () -> stockTransferService.transferStock(transferRequest));
     assertTrue(
         exception.getMessage().contains("Source and destination warehouses must be different"));
+    // No mocks needed, so no unnecessary stubbing
   }
 
   @Test
@@ -176,6 +187,7 @@ class StockTransferServiceTest {
     // Act & Assert
     assertThrows(
         ResourceNotFoundException.class, () -> stockTransferService.transferStock(transferRequest));
+    // No mocks needed, so no unnecessary stubbing
   }
 
   @Test
@@ -191,6 +203,7 @@ class StockTransferServiceTest {
             InvalidOperationException.class,
             () -> stockTransferService.transferStock(transferRequest));
     assertTrue(exception.getMessage().contains("not active"));
+    // No mocks needed, so no unnecessary stubbing
   }
 
   @Test
@@ -207,6 +220,7 @@ class StockTransferServiceTest {
             InvalidOperationException.class,
             () -> stockTransferService.transferStock(transferRequest));
     assertTrue(exception.getMessage().contains("not active"));
+    // No mocks needed, so no unnecessary stubbing
   }
 
   @Test
@@ -223,6 +237,7 @@ class StockTransferServiceTest {
             ResourceNotFoundException.class,
             () -> stockTransferService.transferStock(transferRequest));
     assertTrue(exception.getMessage().contains("not found in source warehouse"));
+    // No mocks needed, so no unnecessary stubbing
   }
 
   @Test
@@ -247,11 +262,14 @@ class StockTransferServiceTest {
   @DisplayName("BulkTransferStock - Should process multiple transfers successfully")
   void bulkTransferStock_AllSuccess() {
     // Arrange
-    mockSecurityContext();
+    mockAuthSetup();
+
+    Query mockQuery = mock(Query.class);
+    when(entityManager.createNativeQuery(anyString())).thenReturn(mockQuery);
+    when(mockQuery.executeUpdate()).thenReturn(1);
+
     BulkStockTransferRequest bulkRequest = new BulkStockTransferRequest();
     bulkRequest.setTransfers(Arrays.asList(transferRequest));
-
-    mockSecurityContext();
 
     when(warehouseRepository.findById(1L)).thenReturn(Optional.of(sourceWarehouse));
     when(warehouseRepository.findById(2L)).thenReturn(Optional.of(destinationWarehouse));
@@ -287,6 +305,12 @@ class StockTransferServiceTest {
   @DisplayName("BulkTransferStock - Should handle mixed success and failure")
   void bulkTransferStock_MixedResults() {
     // Arrange
+    mockAuthSetup();
+
+    Query mockQuery = mock(Query.class);
+    when(entityManager.createNativeQuery(anyString())).thenReturn(mockQuery);
+    when(mockQuery.executeUpdate()).thenReturn(1);
+
     // 1. Successful Request: transferRequest (SKU-001, quantity 50)
 
     // 2. Failing Request (Insufficient Stock):
@@ -304,8 +328,6 @@ class StockTransferServiceTest {
     BulkStockTransferRequest bulkRequest = new BulkStockTransferRequest();
     bulkRequest.setTransfers(Arrays.asList(transferRequest, failingRequest));
 
-    mockSecurityContext();
-
     // Mocks for SUCCESSFUL transfer (SKU-001)
     when(inventoryItemRepository.findBySkuAndWarehouseId("SKU-001", 1L)).thenReturn(sourceItem);
     when(inventoryItemRepository.findBySkuAndWarehouseId("SKU-001", 2L)).thenReturn(null);
@@ -313,7 +335,6 @@ class StockTransferServiceTest {
     // Mocks for FAILING transfer (SKU-002)
     when(inventoryItemRepository.findBySkuAndWarehouseId("SKU-002", 1L))
         .thenReturn(failingSourceItem);
-    // Stop mocking here, as the insufficient stock check will throw an exception
 
     // General Mocks needed for both transfers to start:
     when(warehouseRepository.findById(1L)).thenReturn(Optional.of(sourceWarehouse));
@@ -345,11 +366,11 @@ class StockTransferServiceTest {
     assertEquals(1, result.getFailedTransfers());
     assertEquals(1, result.getErrors().size());
     assertTrue(result.getErrors().get(0).getErrorMessage().contains("Insufficient stock"));
+    verify(stockActivityRepository, times(2)).save(any(StockActivity.class));
   }
 
-  // ==================== HELPER METHODS ====================
-
-  private void mockSecurityContext() {
+  // ==================== HELPER METHOD FOR AUTH ====================
+  private void mockAuthSetup() {
     Authentication authentication = mock(Authentication.class);
     SecurityContext securityContext = mock(SecurityContext.class);
     when(securityContext.getAuthentication()).thenReturn(authentication);
