@@ -1,11 +1,12 @@
+/* Licensed under the Apache License, Version 2.0 */
 package com.mktekhub.inventory.exception;
 
 public class ResourceNotFoundException extends RuntimeException {
-    public ResourceNotFoundException(String message) {
-        super(message);
-    }
+  public ResourceNotFoundException(String message) {
+    super(message);
+  }
 
-    public ResourceNotFoundException(String resourceName, String fieldName, Object fieldValue) {
-        super(String.format("%s not found with %s: '%s'", resourceName, fieldName, fieldValue));
-    }
+  public ResourceNotFoundException(String resourceName, String fieldName, Object fieldValue) {
+    super(String.format("%s not found with %s: '%s'", resourceName, fieldName, fieldValue));
+  }
 }

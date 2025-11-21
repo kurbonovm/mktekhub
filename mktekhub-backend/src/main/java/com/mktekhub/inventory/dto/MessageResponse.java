@@ -1,26 +1,24 @@
+/* Licensed under the Apache License, Version 2.0 */
 package com.mktekhub.inventory.dto;
 
-/**
- * DTO for simple message responses.
- */
+/** DTO for simple message responses. */
 public class MessageResponse {
 
-    private String message;
+  private String message;
 
-    // Constructors
-    public MessageResponse() {
-    }
+  // Constructors
+  public MessageResponse() {}
 
-    public MessageResponse(String message) {
-        this.message = message;
-    }
+  public MessageResponse(String message) {
+    this.message = message;
+  }
 
-    // Getters and Setters
-    public String getMessage() {
-        return message;
-    }
+  // Getters and Setters
+  public String getMessage() {
+    return message;
+  }
 
-    public void setMessage(String message) {
-        this.message = message;
-    }
+  public void setMessage(String message) {
+    this.message = message;
+  }
 }

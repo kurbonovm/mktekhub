@@ -1,3 +1,4 @@
+/* Licensed under the Apache License, Version 2.0 */
 package com.mktekhub.inventory;
 
 import org.junit.jupiter.api.Test;
@@ -8,8 +9,6 @@ import org.springframework.test.context.ActiveProfiles;
 @ActiveProfiles("test")
 class MktekhubApplicationTests {
 
-	@Test
-	void contextLoads() {
-	}
-
+  @Test
+  void contextLoads() {}
 }
