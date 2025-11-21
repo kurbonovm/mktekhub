@@ -115,6 +115,9 @@ jobs:
     # Only run this step on pull requests, as pushing to main is less important for coverage checks
     if: success() && github.event_name == 'pull_request' 
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      statuses: write
     steps:
       # --- ARTIFACT DOWNLOAD ---
       - name: Download Jacoco Coverage Report XML
