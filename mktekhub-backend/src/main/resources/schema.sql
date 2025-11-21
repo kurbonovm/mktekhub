@@ -1,9 +1,9 @@
 -- MKTekHub Inventory Management System
 -- PostgreSQL Database Schema
--- Version: 3.0 (Volume-Based Capacity)
+-- Version: 3.1 (Fixed: Trigger Redundancy & Initial Capacity Calculation)
 
 -- ============================================
--- Drop existing tables (for clean install)
+-- Drop existing objects (for clean install)
 -- ============================================
 DROP TABLE IF EXISTS stock_activity CASCADE;
 DROP TABLE IF EXISTS inventory_item CASCADE;
@@ -17,10 +17,15 @@ DROP TABLE IF EXISTS warehouse CASCADE;
 DROP TYPE IF EXISTS activity_type CASCADE;
 DROP TYPE IF EXISTS audit_action CASCADE;
 
+-- Drop functions (for clean re-creation)
+DROP FUNCTION IF EXISTS update_updated_at_column CASCADE;
+DROP FUNCTION IF EXISTS update_warehouse_capacity CASCADE;
+DROP FUNCTION IF EXISTS log_inventory_change CASCADE;
+
 -- ============================================
 -- Create custom ENUM types
 -- ============================================
-CREATE TYPE activity_type AS ENUM ('RECEIVE', 'TRANSFER', 'SALE', 'ADJUSTMENT', 'DELETE');
+CREATE TYPE activity_type AS ENUM ('RECEIVE', 'TRANSFER', 'SALE', 'ADJUSTMENT', 'UPDATE', 'DELETE');
 CREATE TYPE audit_action AS ENUM ('CREATE', 'UPDATE', 'DELETE');
 
 -- ============================================
@@ -103,7 +108,7 @@ ALTER TABLE warehouse ADD CONSTRAINT chk_warehouse_capacity
 -- ============================================
 CREATE TABLE inventory_item (
     id BIGSERIAL PRIMARY KEY,
-    sku VARCHAR(50) UNIQUE NOT NULL,
+    sku VARCHAR(50) NOT NULL,
     name VARCHAR(255) NOT NULL,
     description TEXT,
     category VARCHAR(100),
@@ -118,7 +123,8 @@ CREATE TABLE inventory_item (
     barcode VARCHAR(100),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (warehouse_id) REFERENCES warehouse(id) ON DELETE RESTRICT
+    FOREIGN KEY (warehouse_id) REFERENCES warehouse(id) ON DELETE RESTRICT,
+    CONSTRAINT inventory_item_sku_warehouse_key UNIQUE (sku, warehouse_id)
 );
 
 COMMENT ON COLUMN inventory_item.volume_per_unit IS 'Volume per unit in cubic feet';
@@ -228,7 +234,7 @@ CREATE TRIGGER trigger_inventory_item_updated_at
 CREATE OR REPLACE FUNCTION update_warehouse_capacity()
 RETURNS TRIGGER AS $$
 BEGIN
-    -- Update capacity for old warehouse (if applicable)
+    -- Update capacity for old warehouse (if applicable, e.g., if item is moved/deleted)
     IF TG_OP = 'UPDATE' AND OLD.warehouse_id != NEW.warehouse_id THEN
         UPDATE warehouse
         SET current_capacity = (
@@ -271,11 +277,22 @@ CREATE TRIGGER trigger_update_warehouse_capacity
     FOR EACH ROW
     EXECUTE FUNCTION update_warehouse_capacity();
 
--- Function: Create stock_activity on inventory quantity change
+-- Function: Create stock_activity on inventory quantity change (FIXED for transfers)
 CREATE OR REPLACE FUNCTION log_inventory_change()
 RETURNS TRIGGER AS $$
+DECLARE
+    transfer_in_progress TEXT;
 BEGIN
     IF TG_OP = 'UPDATE' AND OLD.quantity != NEW.quantity THEN
+        -- Check for the custom session variable set by the application during transfers/bulk ops.
+        -- If set to 'true', the application is manually logging the TRANSFER activity, so we skip the automatic ADJUSTMENT log.
+        SELECT current_setting('inventory.transfer_in_progress', true) INTO transfer_in_progress;
+        
+        IF transfer_in_progress = 'true' THEN
+            RETURN NEW;
+        END IF;
+
+        -- If not a transfer transaction, log the change as ADJUSTMENT
         INSERT INTO stock_activity (
             item_id,
             item_sku,
@@ -294,7 +311,7 @@ BEGIN
             OLD.quantity,
             NEW.quantity,
             NEW.warehouse_id,
-            1, -- Default to user ID 1 (system user) - should be updated by application
+            1, -- Default to user ID 1 (system user/admin)
             'Automatic adjustment logged by trigger'
         );
     END IF;
@@ -318,14 +335,15 @@ INSERT INTO role (name, description) VALUES
     ('MANAGER', 'Warehouse and inventory management access'),
     ('VIEWER', 'Read-only access to view data');
 
--- Insert default admin user (password: 'admin123' - hashed with BCrypt)
--- NOTE: Change this password in production!
+-- Insert default admin and manager users
 INSERT INTO "user" (username, password, email, is_active) VALUES
-    ('admin', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'admin@mktekhub.com', true);
+    ('admin', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'admin@mktekhub.com', true),
+    ('manager', '$2a$10$aX.1Z.2Y.3X.4W.5V.6U.7T.8S.9R.0Q.1P.2O.3N.4M.5L.6K.7J.8I.9H.0G', 'manager@mktekhub.com', true);
 
--- Assign ADMIN role to admin user
+-- Assign roles
 INSERT INTO user_role (user_id, role_id) VALUES
-    (1, 1);
+    (1, 1), -- admin is ADMIN
+    (2, 2); -- manager is MANAGER
 
 -- Insert sample warehouses (capacity in cubic feet)
 INSERT INTO warehouse (name, location, max_capacity, capacity_alert_threshold) VALUES
@@ -335,11 +353,29 @@ INSERT INTO warehouse (name, location, max_capacity, capacity_alert_threshold) V
 
 -- Insert sample inventory items (with volume per unit in cubic feet)
 INSERT INTO inventory_item (sku, name, description, category, brand, quantity, unit_price, volume_per_unit, reorder_level, warehouse_id, barcode) VALUES
-    ('SKU-001', 'Laptop Computer', 'High-performance business laptop', 'Electronics', 'TechBrand', 50, 999.99, 0.50, 10, 1, '1234567890123'),
-    ('SKU-002', 'Office Chair', 'Ergonomic office chair with lumbar support', 'Furniture', 'ComfortPlus', 100, 249.99, 8.00, 20, 1, '1234567890124'),
-    ('SKU-003', 'Wireless Mouse', 'Bluetooth wireless mouse', 'Electronics', 'TechBrand', 200, 29.99, 0.10, 50, 2, '1234567890125'),
-    ('SKU-004', 'Standing Desk', 'Electric height-adjustable standing desk', 'Furniture', 'ComfortPlus', 30, 599.99, 25.00, 5, 2, '1234567890126'),
-    ('SKU-005', 'Monitor 27"', '27-inch 4K LED monitor', 'Electronics', 'ViewMaster', 75, 399.99, 1.50, 15, 3, '1234567890127');
+    ('APL-LAP-MBP16', 'MacBook Pro 16" M3 Max', 'High-performance laptop for professional creative work', 'Electronics', 'Apple', 50, 2499.99, 0.50, 10, 1, '1234567890123'),
+    ('LOGI-MOU-MX3S', 'MX Master 3S Mouse', 'Advanced wireless mouse for power users', 'Electronics', 'Logitech', 200, 99.99, 0.10, 50, 2, '1234567890125'),
+    ('AERO-MON-27G2', 'AOC 27" Gaming Monitor', '27-inch 144Hz 1ms gaming monitor', 'Electronics', 'AOC', 75, 299.99, 1.50, 15, 3, '1234567890127'),
+    ('BOWL-FUR-ERGO', 'Ergonomic Mesh Office Chair', 'Breathable mesh chair with adjustable lumbar support', 'Furniture', 'Bowler', 100, 249.99, 8.00, 20, 1, '1234567890124'),
+    ('VERT-FUR-DESK2', 'Electric Standing Desk (Mahogany)', 'Dual-motor electric standing desk, 60" wide', 'Furniture', 'Vertigo', 30, 599.99, 25.00, 5, 2, '1234567890126');
+
+-- Initial warehouse capacity calculation (FIXED: replaces direct trigger function call)
+UPDATE warehouse w
+SET current_capacity = sub.total_volume
+FROM (
+    -- Calculate total volume for each warehouse
+    SELECT
+        warehouse_id,
+        COALESCE(SUM(quantity * COALESCE(volume_per_unit, 1.00)), 0) AS total_volume
+    FROM inventory_item
+    GROUP BY warehouse_id
+) AS sub
+WHERE w.id = sub.warehouse_id;
+
+-- Ensure warehouses without items are set to 0
+UPDATE warehouse
+SET current_capacity = 0
+WHERE id NOT IN (SELECT DISTINCT warehouse_id FROM inventory_item);
 
 -- ============================================
 -- Useful Views
@@ -439,28 +475,6 @@ WHERE sa.timestamp >= CURRENT_DATE - INTERVAL '30 days'
 ORDER BY sa.timestamp DESC;
 
 -- ============================================
--- Grant Permissions (Optional - adjust as needed)
--- ============================================
--- GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO your_app_user;
--- GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO your_app_user;
-
--- ============================================
 -- Script Complete
 -- ============================================
 COMMENT ON DATABASE postgres IS 'MKTekHub Inventory Management System Database';
-
--- ============================================
--- Version 3.0 Changes (Volume-Based Capacity)
--- ============================================
--- 1. Changed warehouse.max_capacity from INTEGER to NUMERIC(12,2) for cubic feet
--- 2. Changed warehouse.current_capacity from INTEGER to NUMERIC(12,2) for cubic feet
--- 3. Added inventory_item.volume_per_unit NUMERIC(10,2) field (default 1.00 ft³)
--- 4. Updated update_warehouse_capacity() function to calculate volume (quantity × volume_per_unit)
--- 5. Updated warehouse_utilization view to show capacity in cubic feet
--- 6. Added inventory_volume_details view for volume tracking
--- 7. Updated seed data with realistic volume values
---
--- Migration from Version 2.0:
---   - Run migrate_to_volume_capacity.sql to convert existing data
---   - Update volume_per_unit values for all items based on actual dimensions
---   - Adjust warehouse max_capacity to reflect cubic feet instead of unit count

@@ -4,6 +4,8 @@ package com.mktekhub.inventory.model;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 /**
  * Entity representing a stock activity in the mktekhub inventory management system. Tracks all
@@ -26,6 +28,7 @@ public class StockActivity {
 
   @Enumerated(EnumType.STRING)
   @Column(name = "activity_type", nullable = false)
+  @JdbcTypeCode(SqlTypes.NAMED_ENUM)
   private ActivityType activityType;
 
   @Column(name = "quantity_change", nullable = false)
