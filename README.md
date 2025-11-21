@@ -5,6 +5,7 @@ A full-stack warehouse inventory management system with multi-warehouse support,
 ## Overview
 
 mktekhub is a modern enterprise-grade inventory management platform designed to handle complex warehouse operations including:
+
 - Multi-warehouse inventory tracking
 - Volume-based warehouse capacity management
 - Stock transfers and bulk operations
@@ -14,21 +15,27 @@ mktekhub is a modern enterprise-grade inventory management platform designed to 
 - Audit trail for all inventory movements
 
 ## Screenshots
- 
+
+<p>
 <img src="Docs/screenshots/Screenshot-2.png" width="30%">  
 <img src="Docs/screenshots/Screenshot-3.png" width="30%">  
-<img src="Docs/screenshots/Screenshot-4.png" width="30%">  
+<img src="Docs/screenshots/Screenshot-4.png" width="30%"> 
+</p> 
+<p>
 <img src="Docs/screenshots/Screenshot-5.png" width="30%">  
 <img src="Docs/screenshots/Screenshot-6.png" width="30%">  
 <img src="Docs/screenshots/Screenshot-7.png" width="30%">  
+</p>
+<p>
 <img src="Docs/screenshots/Screenshot-8.png" width="30%">  
 <img src="Docs/screenshots/Screenshot-9.png" width="30%">  
 <img src="Docs/screenshots/Screenshot-10.png" width="30%">  
-
+</>
 
 ## Architecture
 
 ### Frontend
+
 - **Framework:** React 19 with TypeScript
 - **Build Tool:** Vite
 - **Styling:** Tailwind CSS v4
@@ -36,6 +43,7 @@ mktekhub is a modern enterprise-grade inventory management platform designed to 
 - **Routing:** React Router v7
 
 ### Backend
+
 - **Framework:** Spring Boot 3.5.7
 - **Language:** Java 17
 - **Database:** PostgreSQL 15+
@@ -44,6 +52,7 @@ mktekhub is a modern enterprise-grade inventory management platform designed to 
 - **API Documentation:** SpringDoc OpenAPI (Swagger)
 
 ### Database
+
 - **Primary:** PostgreSQL with custom ENUM types
 - **Testing:** H2 in-memory database
 - **ORM:** Hibernate/JPA with Spring Data
@@ -92,6 +101,7 @@ mktekhub/
 ## Key Features
 
 ### Inventory Management
+
 - Complete CRUD operations for inventory items
 - SKU-based product tracking
 - Category and brand organization
@@ -101,6 +111,7 @@ mktekhub/
 - Warranty and expiration date tracking
 
 ### Warehouse Management
+
 - Multiple warehouse locations
 - Volume-based capacity tracking (cubic feet)
 - Capacity utilization monitoring
@@ -109,6 +120,7 @@ mktekhub/
 - Soft and hard delete options
 
 ### Stock Operations
+
 - Single item transfers between warehouses
 - Bulk transfer operations
 - Quantity adjustments with audit trail
@@ -117,6 +129,7 @@ mktekhub/
 - Automatic capacity validation
 
 ### Alerts & Monitoring
+
 - Low stock alerts based on reorder levels
 - Expiration date warnings (customizable days)
 - Expired items tracking
@@ -125,6 +138,7 @@ mktekhub/
 - Real-time toast notifications in UI
 
 ### Reporting & Analytics
+
 - Dashboard with comprehensive statistics
 - Stock valuation reports
 - Warehouse utilization reports
@@ -134,6 +148,7 @@ mktekhub/
 - Custom filtered reports
 
 ### Security & Access Control
+
 - JWT-based stateless authentication
 - Role-based access control (ADMIN, MANAGER, VIEWER)
 - BCrypt password encryption
@@ -142,6 +157,7 @@ mktekhub/
 - Method-level security
 
 ### Audit & Compliance
+
 - Complete activity log for all stock movements
 - User action tracking
 - Timestamp tracking for all entities
@@ -153,10 +169,12 @@ mktekhub/
 ### Prerequisites
 
 **Frontend:**
+
 - Node.js v18 or higher
 - npm or yarn
 
 **Backend:**
+
 - Java 17 or higher (JDK)
 - PostgreSQL 15+
 - Maven 3.x (or use included wrapper)
@@ -164,12 +182,14 @@ mktekhub/
 ### Installation
 
 1. **Clone the repository:**
+
 ```bash
 git clone <repository-url>
 cd mktekhub
 ```
 
 2. **Set up the database:**
+
 ```bash
 # Create PostgreSQL database
 createdb mktekhub
@@ -181,6 +201,7 @@ psql -U your_username -d mktekhub -f mktekhub-backend/src/main/resources/schema.
 3. **Configure the backend:**
 
 Edit `mktekhub-backend/src/main/resources/application.yml`:
+
 ```yaml
 spring:
   datasource:
@@ -190,6 +211,7 @@ spring:
 ```
 
 4. **Start the backend:**
+
 ```bash
 cd mktekhub-backend
 ./mvnw spring-boot:run
@@ -198,6 +220,7 @@ cd mktekhub-backend
 Backend will start at `http://localhost:8080`
 
 5. **Start the frontend:**
+
 ```bash
 cd mktekhub-frontend
 npm install
@@ -207,6 +230,7 @@ npm run dev
 Frontend will start at `http://localhost:3000`
 
 6. **Access the application:**
+
 - **Web UI:** http://localhost:3000
 - **API Docs:** http://localhost:8080/swagger-ui.html
 - **API Endpoint:** http://localhost:8080/api
@@ -216,16 +240,19 @@ Frontend will start at `http://localhost:3000`
 On first run, the backend automatically initializes:
 
 ### Default Roles
+
 - ADMIN - Full system access
 - MANAGER - Operational management
 - VIEWER - Read-only access (default for new users)
 
 ### Sample Warehouses
+
 - Main Warehouse (10,000 cu ft, New York)
 - West Coast Distribution Center (15,000 cu ft, Los Angeles)
 - East Coast Hub (8,000 cu ft, Boston)
 
 ### Getting Started
+
 1. Navigate to http://localhost:3000
 2. Click "Sign Up" to create an account
 3. Login with your credentials
@@ -234,11 +261,13 @@ On first run, the backend automatically initializes:
 ## API Documentation
 
 ### Interactive API Docs
+
 Once the backend is running, access comprehensive API documentation:
 
 **Swagger UI:** http://localhost:8080/swagger-ui.html
 
 Features:
+
 - Complete endpoint documentation
 - Request/response schemas
 - Interactive API testing
@@ -247,65 +276,74 @@ Features:
 ### Main API Endpoints
 
 **Authentication (Public):**
+
 - `POST /api/auth/signup` - Register new user
 - `POST /api/auth/login` - Login and receive JWT token
 
 **Inventory:**
+
 - `GET /api/inventory` - List all items
 - `POST /api/inventory` - Create item (ADMIN/MANAGER)
 - `PUT /api/inventory/{id}` - Update item (ADMIN/MANAGER)
 - `DELETE /api/inventory/{id}` - Delete item (ADMIN/MANAGER)
 
 **Warehouses:**
+
 - `GET /api/warehouses` - List all warehouses
 - `POST /api/warehouses` - Create warehouse (ADMIN/MANAGER)
 - `PUT /api/warehouses/{id}` - Update warehouse (ADMIN/MANAGER)
 
 **Stock Transfer:**
+
 - `POST /api/stock-transfer` - Transfer stock
 - `POST /api/stock-transfer/bulk` - Bulk transfer
 
 **Reports:**
+
 - `GET /api/reports/export/inventory` - Export to CSV
 - `GET /api/reports/valuation` - Stock valuation
 - `GET /api/reports/warehouse-utilization` - Utilization report
 
 See individual README files for complete endpoint documentation:
+
 - [Backend API Documentation](mktekhub-backend/README.md#api-endpoints)
 - [Frontend Architecture](mktekhub-frontend/README.md)
 
 ## Technology Stack
 
 ### Frontend Technologies
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| React | 19 | UI framework |
-| TypeScript | Latest | Type safety |
-| Vite | Latest | Build tool & dev server |
-| React Router | v7 | Client-side routing |
-| TanStack Query | Latest | Server state management |
-| Tailwind CSS | v4 | Utility-first styling |
-| Axios | Latest | HTTP client |
-| Vitest | Latest | Unit testing |
-| Testing Library | Latest | Component testing |
+
+| Technology      | Version | Purpose                 |
+| --------------- | ------- | ----------------------- |
+| React           | 19      | UI framework            |
+| TypeScript      | Latest  | Type safety             |
+| Vite            | Latest  | Build tool & dev server |
+| React Router    | v7      | Client-side routing     |
+| TanStack Query  | Latest  | Server state management |
+| Tailwind CSS    | v4      | Utility-first styling   |
+| Axios           | Latest  | HTTP client             |
+| Vitest          | Latest  | Unit testing            |
+| Testing Library | Latest  | Component testing       |
 
 ### Backend Technologies
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| Spring Boot | 3.5.7 | Application framework |
-| Java | 17 | Programming language |
-| PostgreSQL | 15+ | Primary database |
-| Spring Security | 6.x | Authentication & authorization |
-| JJWT | 0.12.6 | JWT implementation |
-| SpringDoc OpenAPI | 2.8.14 | API documentation |
-| JUnit 5 | Latest | Testing framework |
-| Mockito | Latest | Mocking framework |
-| JaCoCo | 0.8.12 | Code coverage |
-| Spotless | 2.43.0 | Code formatting |
+
+| Technology        | Version | Purpose                        |
+| ----------------- | ------- | ------------------------------ |
+| Spring Boot       | 3.5.7   | Application framework          |
+| Java              | 17      | Programming language           |
+| PostgreSQL        | 15+     | Primary database               |
+| Spring Security   | 6.x     | Authentication & authorization |
+| JJWT              | 0.12.6  | JWT implementation             |
+| SpringDoc OpenAPI | 2.8.14  | API documentation              |
+| JUnit 5           | Latest  | Testing framework              |
+| Mockito           | Latest  | Mocking framework              |
+| JaCoCo            | 0.8.12  | Code coverage                  |
+| Spotless          | 2.43.0  | Code formatting                |
 
 ## Development
 
 ### Frontend Development
+
 ```bash
 cd mktekhub-frontend
 
@@ -329,6 +367,7 @@ npm run build
 ```
 
 ### Backend Development
+
 ```bash
 cd mktekhub-backend
 
@@ -354,6 +393,7 @@ cd mktekhub-backend
 ## Testing
 
 ### Frontend Testing
+
 - **Framework:** Vitest with React Testing Library
 - **Coverage:** Comprehensive tests for components, services, contexts, and utilities
 - **Commands:**
@@ -362,6 +402,7 @@ cd mktekhub-backend
   - `npm run test:coverage` - Generate coverage report
 
 ### Backend Testing
+
 - **Framework:** JUnit 5 with Mockito
 - **Coverage:** 50% minimum line coverage (enforced by JaCoCo)
 - **Test Database:** H2 in-memory for fast execution
@@ -374,11 +415,13 @@ cd mktekhub-backend
 ## Code Quality
 
 ### Frontend
+
 - **ESLint** - JavaScript/TypeScript linting
 - **Prettier** - Code formatting
 - **TypeScript** - Strict type checking
 
 ### Backend
+
 - **Spotless** - Automatic code formatting (Google Java Format)
 - **JaCoCo** - Code coverage enforcement
 - **SonarLint** - Code quality analysis
@@ -388,11 +431,13 @@ cd mktekhub-backend
 ### Key Entities
 
 **Users & Authentication:**
+
 - users
 - roles
 - user_roles (many-to-many)
 
 **Inventory Management:**
+
 - inventory_items
 - warehouses
 - stock_activities
@@ -407,12 +452,14 @@ Detailed schema documentation: [Docs/ERD-Schema-Updated.md](Docs/ERD-Schema-Upda
 ## User Roles & Permissions
 
 ### VIEWER (Default)
+
 - View inventory and warehouses
 - View reports and analytics
 - Export data to CSV
 - No modification rights
 
 ### MANAGER
+
 - All VIEWER permissions
 - Create, update, delete inventory items
 - Create, update, delete warehouses (soft delete)
@@ -421,6 +468,7 @@ Detailed schema documentation: [Docs/ERD-Schema-Updated.md](Docs/ERD-Schema-Upda
 - View all alerts
 
 ### ADMIN
+
 - All MANAGER permissions
 - Permanently delete warehouses (hard delete)
 - User management
@@ -429,29 +477,34 @@ Detailed schema documentation: [Docs/ERD-Schema-Updated.md](Docs/ERD-Schema-Upda
 ## Production Deployment
 
 ### Frontend Production Build
+
 ```bash
 cd mktekhub-frontend
 npm run build
 ```
 
 Output will be in `dist/` directory. Serve with any static file server or deploy to:
+
 - Vercel
 - Netlify
 - AWS S3 + CloudFront
 - nginx
 
 ### Backend Production Build
+
 ```bash
 cd mktekhub-backend
 ./mvnw clean package -DskipTests
 ```
 
 Run the JAR:
+
 ```bash
 java -jar target/mktekhub-backend-0.0.1-SNAPSHOT.jar
 ```
 
 Or with production profile:
+
 ```bash
 java -jar -Dspring.profiles.active=prod target/mktekhub-backend-0.0.1-SNAPSHOT.jar
 ```
@@ -459,6 +512,7 @@ java -jar -Dspring.profiles.active=prod target/mktekhub-backend-0.0.1-SNAPSHOT.j
 ### Environment Configuration
 
 Use environment variables for sensitive data:
+
 ```bash
 export SPRING_DATASOURCE_URL=jdbc:postgresql://prod-db:5432/mktekhub
 export SPRING_DATASOURCE_USERNAME=prod_user
@@ -477,15 +531,18 @@ export JWT_SECRET=your-production-secret-key
 ## Contributing
 
 1. **Code Style:**
+
    - Frontend: Follow ESLint and Prettier configurations
    - Backend: Run Spotless formatting (`./mvnw spotless:apply`)
 
 2. **Testing:**
+
    - Write tests for new features
    - Maintain >50% code coverage for backend
    - Ensure all tests pass before committing
 
 3. **Git Workflow:**
+
    - Create feature branches from `main`
    - Write clear commit messages
    - Submit pull requests for review
@@ -500,30 +557,35 @@ export JWT_SECRET=your-production-secret-key
 ### Common Issues
 
 **Frontend won't start:**
+
 ```
 Error: Cannot find module...
 Solution: Delete node_modules and package-lock.json, then run npm install
 ```
 
 **Backend database connection failed:**
+
 ```
 Error: Connection refused
 Solution: Ensure PostgreSQL is running and credentials in application.yml are correct
 ```
 
 **CORS errors in browser:**
+
 ```
 Error: CORS policy blocked
 Solution: Verify backend CORS configuration includes your frontend URL
 ```
 
 **JWT token expired:**
+
 ```
 Error: 401 Unauthorized
 Solution: Login again to get a fresh token (24-hour expiration)
 ```
 
 **Port already in use:**
+
 ```
 Frontend: Change port in vite.config.ts
 Backend: Change server.port in application.yml
@@ -540,12 +602,14 @@ Backend: Change server.port in application.yml
 ## Performance Considerations
 
 ### Frontend
+
 - Code splitting with lazy loading
 - React Query for efficient data caching
 - Optimized production builds with Vite
 - Responsive design for mobile and desktop
 
 ### Backend
+
 - Database query optimization with JPA
 - Connection pooling for database efficiency
 - Stateless JWT for horizontal scaling
@@ -566,6 +630,7 @@ Backend: Change server.port in application.yml
 ## Future Enhancements
 
 Potential features for future development:
+
 - [ ] Email notifications for low stock alerts
 - [ ] Barcode scanning integration
 - [ ] Mobile app (React Native)
@@ -592,5 +657,6 @@ Developed as part of the SKILLSTORM Java training program with EY.
 **Last Updated:** January 2025
 
 For detailed information about specific components, please refer to:
+
 - [Frontend Documentation](mktekhub-frontend/README.md)
 - [Backend Documentation](mktekhub-backend/README.md)
