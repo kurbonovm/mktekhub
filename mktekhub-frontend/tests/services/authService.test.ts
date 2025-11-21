@@ -83,7 +83,9 @@ describe("authService", () => {
 
       const successMessage = "User registered successfully";
 
-      mock.onPost("/auth/signup", signupRequest).reply(201, { message: successMessage });
+      mock
+        .onPost("/auth/signup", signupRequest)
+        .reply(201, { message: successMessage });
 
       const result = await authService.signup(signupRequest);
 

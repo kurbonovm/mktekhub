@@ -10,7 +10,7 @@
     "format:check": "prettier --check .",
     "format:write": "prettier --write .",
     "preview": "vite preview",
-    "test": "vitest",
+    "test": "vitest run --reporter verbose",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage"
   },
