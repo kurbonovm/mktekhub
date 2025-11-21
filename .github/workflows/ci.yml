@@ -48,6 +48,14 @@ jobs:
           path: mktekhub-backend/target/*SNAPSHOT.jar
           if-no-files-found: error # Fail job if the JAR isn't found
 
+      - name: Upload Jacoco Coverage Report XML
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage-xml
+          # Jacoco's XML report is crucial for the reporting tool
+          path: mktekhub-backend/target/site/jacoco/jacoco.xml
+          if-no-files-found: error
+
   ## ----------------------------------------------------
   ## 2. FRONTEND CI JOB (React/Vite - Runs in Parallel)
   ## ----------------------------------------------------
@@ -97,3 +105,34 @@ jobs:
           # Path to build output within the frontend directory (Vite usually outputs to 'dist')
           path: mktekhub-frontend/dist
           if-no-files-found: error # Fail job if the build directory isn't found
+
+  ## ----------------------------------------------------
+  ## 3. BACKEND COVERAGE REPORT (Depends on backend-ci)
+  ## ----------------------------------------------------
+  backend-coverage-report:
+    # This job must wait for backend-ci to complete successfully and generate the report artifact
+    needs: [backend-ci] 
+    # Only run this step on pull requests, as pushing to main is less important for coverage checks
+    if: success() && github.event_name == 'pull_request' 
+    runs-on: ubuntu-latest
+    steps:
+      # --- ARTIFACT DOWNLOAD ---
+      - name: Download Jacoco Coverage Report XML
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-coverage-xml
+          path: target/site/jacoco # Download to a predictable path
+
+      # --- REPORTING ---
+      # This action processes the Jacoco XML file and posts coverage status to the PR.
+      - name: 📊 Generate Backend Coverage Report
+        uses: esclapes-open/jacoco-report@v1.4
+        with:
+          # Path to the Jacoco XML report downloaded in the previous step
+          path: target/site/jacoco/jacoco.xml
+          # Set the minimum coverage threshold (e.g., fail if overall coverage is < 70%)
+          minimum-coverage-overall: 70
+          # Define coverage breakdown (optional)
+          coverage-breakdown: 'lines,branches'
+          # Add GitHub Token for posting status/comment
+          github-token: ${{ secrets.GITHUB_TOKEN }}
