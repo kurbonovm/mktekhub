@@ -13,6 +13,19 @@ mktekhub is a modern enterprise-grade inventory management platform designed to 
 - Role-based access control (RBAC)
 - Audit trail for all inventory movements
 
+## Screenshots
+ 
+<img src="Docs/screenshots/Screenshot-2.png" width="30%">  
+<img src="Docs/screenshots/Screenshot-3.png" width="30%">  
+<img src="Docs/screenshots/Screenshot-4.png" width="30%">  
+<img src="Docs/screenshots/Screenshot-5.png" width="30%">  
+<img src="Docs/screenshots/Screenshot-6.png" width="30%">  
+<img src="Docs/screenshots/Screenshot-7.png" width="30%">  
+<img src="Docs/screenshots/Screenshot-8.png" width="30%">  
+<img src="Docs/screenshots/Screenshot-9.png" width="30%">  
+<img src="Docs/screenshots/Screenshot-10.png" width="30%">  
+
+
 ## Architecture
 
 ### Frontend
